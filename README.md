@@ -18,9 +18,9 @@ A web application designed for food enthusiasts to discover, share, and save the
 
 *(Update this section based on the technologies you are using)*
 
-- **Frontend:** HTML5, CSS3, JavaScript / React
-- **Backend:** Node.js, Express / C# .NET / Python
-- **Database:** MongoDB / PostgreSQL / SQL Server
+- **Frontend:** HTML5, CSS3, JavaScript 
+- **Backend:**  C# .NET 
+- **Database:** MongoDB 
 - **Version Control:** Git & GitHub
 
 ---
