@@ -1,0 +1,739 @@
+﻿@model OnlineRecipeSharing.Models.ViewModels.ProfilePageViewModel
+@using OnlineRecipeSharing.Models
+@{
+    ViewData["Title"] = "My Profile - TasteShare";
+}
+
+<div class="profile-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                @if (!string.IsNullOrEmpty(Model.Profile.profile_image))
+                {
+                    <img src="@Model.Profile.profile_image" alt="@Model.Profile.username" class="profile-avatar">
+                }
+                else
+                {
+                    <div class="profile-avatar bg-light d-flex align-items-center justify-content-center">
+                        <i class="fas fa-user text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                }
+            </div>
+            <div class="col">
+                <h1 class="display-5 fw-bold mb-2">@Model.Profile.username</h1>
+                <p class="lead mb-2">@Model.Profile.FirstName @Model.Profile.MiddleName @Model.Profile.LastName</p>
+                <div class="mb-2">
+                    <span class="role-badge">
+                        <i class="fas fa-user-shield me-1"></i>@Model.Profile.role
+                    </span>
+                    @if (Model.Profile.is_active)
+                    {
+                        <span class="status-badge ms-2">
+                            <i class="fas fa-check-circle me-1"></i>Active
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary ms-2">
+                            <i class="fas fa-times-circle me-1"></i>Inactive
+                        </span>
+                    }
+                </div>
+                <p class="mb-0 opacity-75">
+                    <i class="fas fa-calendar me-2"></i>Member since @Model.Profile.date_created.ToString("MMMM yyyy")
+                </p>
+            </div>
+            <div class="col-auto">
+                <a asp-action="Edit" class="btn btn-light btn-lg">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Left Column - Stats -->
+        <div class="col-lg-4">
+            <div class="stats-card mb-4 clickable-card" id="userRecipesCard">
+                <span class="stat-number" id="recipeCountDisplay">@Model.Profile.RecipesCount</span>
+                <span class="stat-label">Recipes</span>
+                <span class="stat-hint">Click to view all</span>
+            </div>
+
+            <!-- Account Info -->
+            <div class="bio-section">
+                <h5 class="mb-3">Account Information</h5>
+                <div class="mb-2">
+                    <strong>Full Name:</strong>
+                    <span class="float-end">@Model.Profile.FirstName @Model.Profile.MiddleName @Model.Profile.LastName</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Username:</strong>
+                    <span class="float-end">@Model.Profile.username</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Email:</strong>
+                    <span class="float-end">@Model.Profile.email</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Role:</strong>
+                    <span class="float-end">@Model.Profile.role</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Status:</strong>
+                    <span class="float-end">
+                        @if (Model.Profile.is_active)
+                        {
+                            <span class="text-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">Inactive</span>
+                        }
+                    </span>
+                </div>
+                <div class="mb-2">
+                    <strong>Member Since:</strong>
+                    <span class="float-end">@Model.Profile.date_created.ToString("MMM dd, yyyy")</span>
+                </div>
+                @if (Model.Profile.last_login.HasValue)
+                {
+                    <div>
+                        <strong>Last Login:</strong>
+                        <span class="float-end">@Model.Profile.last_login.Value.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right Column - Bio & Activity -->
+        <div class="col-lg-8">
+            <!-- Bio Section -->
+            <div class="bio-section">
+                <h4 class="mb-3">About Me</h4>
+                @if (!string.IsNullOrEmpty(Model.Profile.bio))
+                {
+                    <p class="lead">@Model.Profile.bio</p>
+                }
+                else
+                {
+                    <p class="text-muted">No bio yet. <a asp-action="Edit">Add a bio</a> to tell others about yourself!</p>
+                }
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bio-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Recent Activity</h4>
+                    <span class="badge bg-success">@Model.RecentActivities.Count activities</span>
+                </div>
+
+                @if (Model.RecentActivities.Any())
+                {
+                    <div class="activity-feed">
+                        @foreach (var activity in Model.RecentActivities)
+                        {
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    @switch (activity.Type)
+                                    {
+                                        case "recipe_created":
+                                            <i class="fas fa-plus-circle text-success"></i>
+                                            break;
+                                        case "recipe_updated":
+                                            <i class="fas fa-edit text-warning"></i>
+                                            break;
+                                        case "comment_added":
+                                            <i class="fas fa-comment text-info"></i>
+                                            break;
+                                        case "liked_recipe":
+                                            <i class="fas fa-thumbs-up text-primary"></i>
+                                            break;
+                                        case "profile_updated":
+                                            <i class="fas fa-user-edit text-secondary"></i>
+                                            break;
+                                        default:
+                                            <i class="fas fa-circle text-muted"></i>
+                                            break;
+                                    }
+                                </div>
+                                <div class="activity-content flex-grow-1">
+                                    <div class="activity-text">
+                                        @activity.Description
+                                    </div>
+                                    <div class="activity-meta text-muted small">
+                                        <i class="fas fa-clock me-1"></i>@activity.Timestamp.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(activity.RecipeId))
+                                    {
+                                        <div class="mt-1">
+                                            <a href="@Url.Action("Details", "Recipe", new { id = activity.RecipeId })" class="btn btn-outline-success btn-sm">
+                                                <i class="fas fa-external-link-alt me-1"></i>View Recipe
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-clock text-muted mb-3" style="font-size: 3rem;"></i>
+                        <p class="text-muted">No recent activity yet</p>
+                        <p class="small text-muted">Start by creating recipes, commenting, or liking other recipes!</p>
+                        <a href="@Url.Action("PublicRecipe", "Home")" class="btn btn-success btn-sm">
+                            <i class="fas fa-compass me-1"></i>Explore Recipes
+                        </a>
+                    </div>
+                }
+
+                @if (Model.Profile.last_login.HasValue)
+                {
+                    <div class="text-center mt-3 pt-3 border-top">
+                        <p class="small text-muted mb-0">
+                            <i class="fas fa-user-clock me-1"></i>Last active: @Model.Profile.last_login.Value.ToString("MMMM dd, yyyy 'at' h:mm tt")
+                        </p>
+                    </div>
+                }
+            </div>
+            <!-- Recipes Modal -->
+            <div class="modal fade" id="recipesModal" tabindex="-1" aria-labelledby="recipesModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="recipesModalLabel">
+                                <i class="fas fa-utensils me-2"></i>
+                                <span id="modalUsername">@Model.Profile.username</span>'s Recipes
+                                <span class="badge bg-success ms-2" id="modalRecipeCount">@Model.Profile.RecipesCount</span>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row g-3" id="recipesGrid">
+                                <!-- Recipes will be loaded here -->
+                            </div>
+                            <div class="text-center py-5" id="loadingRecipes">
+                                <div class="spinner-border text-success" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Loading recipes...</p>
+                            </div>
+                            <div class="text-center py-5 d-none" id="noRecipes">
+                                <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No recipes yet</h5>
+                                <p class="text-muted">This user hasn't shared any recipes yet.</p>
+                                @if (Context.Session.GetString("UserId") == Model.Profile._id)
+                                {
+                                    <a href="@Url.Action("Create", "Recipe")" class="btn btn-success">
+                                        <i class="fas fa-plus me-2"></i>Create Your First Recipe
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+    .profile-header {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease;
+    }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #28a745;
+        display: block;
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .bio-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+
+    .role-badge {
+        background: rgba(255, 193, 7, 0.1);
+        color: #856404;
+        border: 1px solid #ffc107;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+
+    .status-badge {
+        background: rgba(40, 167, 69, 0.1);
+        color: #155724;
+        border: 1px solid #28a745;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+
+    /* Activity Feed Styles */
+    .activity-feed {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s ease;
+    }
+
+        .activity-item:hover {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+        .activity-icon i {
+            font-size: 1.1rem;
+        }
+
+    .activity-content {
+        min-width: 0;
+    }
+
+    .activity-text {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        line-height: 1.4;
+    }
+
+    .activity-meta {
+        font-size: 0.8rem;
+    }
+
+    /* Scrollbar styling */
+    .activity-feed::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .activity-feed::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .activity-feed::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+
+        .activity-feed::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    /* Recipe Count Card */
+    .clickable-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+        .clickable-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .clickable-card::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2328a745'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .clickable-card:hover::after {
+            opacity: 1;
+        }
+
+    .stat-hint {
+        display: block;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        font-weight: normal;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    /* Recipe Card in Modal */
+    .recipe-modal-card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .recipe-modal-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+    .recipe-modal-image {
+        height: 150px;
+        width: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .recipe-modal-card:hover .recipe-modal-image {
+        transform: scale(1.05);
+    }
+
+    .recipe-modal-placeholder {
+        height: 150px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .recipe-modal-placeholder i {
+            font-size: 2rem;
+            color: #adb5bd;
+        }
+
+    .recipe-modal-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .recipe-modal-category {
+        font-size: 0.8rem;
+        color: #28a745;
+        background: rgba(40, 167, 69, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        display: inline-block;
+        font-weight: 500;
+    }
+
+    .recipe-modal-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .recipe-modal-stats {
+        font-size: 0.85rem;
+    }
+
+        .recipe-modal-stats .likes {
+            color: #28a745;
+        }
+
+        .recipe-modal-stats .dislikes {
+            color: #dc3545;
+        }
+
+        .recipe-modal-stats .comments {
+            color: #6c757d;
+        }
+
+    /* Modal customizations */
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        border-bottom: 2px solid #e9ecef;
+        background: linear-gradient(to right, #f8f9fa, #fff);
+    }
+
+    .modal-title {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .modal-body {
+        min-height: 300px;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+        /* Scrollbar styling for modal */
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+            .modal-body::-webkit-scrollbar-thumb:hover {
+                background: #a8a8a8;
+            }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get elements
+        const userRecipesCard = document.getElementById('userRecipesCard');
+        const recipesModal = new bootstrap.Modal(document.getElementById('recipesModal'));
+        const recipesGrid = document.getElementById('recipesGrid');
+        const loadingRecipes = document.getElementById('loadingRecipes');
+        const noRecipes = document.getElementById('noRecipes');
+        const modalUsername = document.getElementById('modalUsername');
+        const modalRecipeCount = document.getElementById('modalRecipeCount');
+
+        // User ID from the model
+        const userId = '@Model.Profile._id';
+
+        // Make recipe count card clickable
+        if (userRecipesCard) {
+            userRecipesCard.addEventListener('click', function() {
+                loadUserRecipes();
+                recipesModal.show();
+            });
+        }
+
+        // Load user recipes
+        async function loadUserRecipes() {
+            try {
+                // Show loading state
+                recipesGrid.innerHTML = '';
+                loadingRecipes.classList.remove('d-none');
+                noRecipes.classList.add('d-none');
+
+                // Fetch user recipes
+                const response = await fetch(`/Account/GetUserRecipes?userId=${encodeURIComponent(userId)}`);
+                const result = await response.json();
+
+                // Hide loading
+                loadingRecipes.classList.add('d-none');
+
+                if (result.success && result.recipes && result.recipes.length > 0) {
+                    // Update modal info
+                    if (result.user) {
+                        modalUsername.textContent = result.user.username;
+                        modalRecipeCount.textContent = result.user.recipe_count;
+                    }
+
+                    // Render recipes
+                    result.recipes.forEach(recipe => {
+                        const recipeCard = createRecipeCard(recipe);
+                        recipesGrid.appendChild(recipeCard);
+                    });
+                } else {
+                    noRecipes.classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error('Error loading user recipes:', error);
+                loadingRecipes.classList.add('d-none');
+                noRecipes.classList.remove('d-none');
+                showToast('Failed to load recipes. Please try again.', 'error');
+            }
+        }
+
+        // Create recipe card HTML
+        function createRecipeCard(recipe) {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4';
+
+            // Get first image or use placeholder
+            let imageHtml = '';
+            if (recipe.images && recipe.images.length > 0) {
+                imageHtml = `<img src="${recipe.images[0]}" class="recipe-modal-image" alt="${escapeHtml(recipe.title)}">`;
+            } else {
+                imageHtml = `
+                    <div class="recipe-modal-placeholder">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                `;
+            }
+
+            // Format date
+            const createdDate = new Date(recipe.created_at);
+            const formattedDate = createdDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+
+            col.innerHTML = `
+                <div class="recipe-modal-card">
+                    <div class="overflow-hidden">
+                        <a href="/Recipe/Details/${recipe.recipe_id}">
+                            ${imageHtml}
+                        </a>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="recipe-modal-title mb-2">
+                            <a href="/Recipe/Details/${recipe.recipe_id}" class="text-decoration-none text-dark">
+                                ${escapeHtml(recipe.title)}
+                            </a>
+                        </h6>
+                        ${recipe.category ? `<span class="recipe-modal-category mb-2">${escapeHtml(recipe.category)}</span>` : ''}
+                        <div class="recipe-modal-stats d-flex justify-content-between mt-2">
+                            <div>
+                                <span class="likes">
+                                    <i class="fas fa-thumbs-up me-1"></i>${recipe.likes}
+                                </span>
+                                <span class="dislikes ms-2">
+                                    <i class="fas fa-thumbs-down me-1"></i>${recipe.dislikes}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="comments">
+                                    <i class="fas fa-comment me-1"></i>${recipe.comments_count}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="recipe-modal-date mt-2">
+                            <i class="far fa-calendar me-1"></i>${formattedDate}
+                        </div>
+                        <div class="mt-3">
+                            <a href="/Recipe/Details/${recipe.recipe_id}" class="btn btn-outline-success btn-sm w-100">
+                                <i class="fas fa-external-link-alt me-1"></i>View Recipe
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return col;
+        }
+
+        // Clear modal content when hidden
+        document.getElementById('recipesModal').addEventListener('hidden.bs.modal', function() {
+            recipesGrid.innerHTML = '';
+            loadingRecipes.classList.remove('d-none');
+            noRecipes.classList.add('d-none');
+        });
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            // Create toast if it doesn't exist
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 3000
+            });
+            bsToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => {
+                toast.remove();
+            });
+        }
+    });
+</script>

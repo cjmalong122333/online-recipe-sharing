@@ -1,0 +1,315 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    var userId = Context.Session.GetString("UserId");
+    var userRole = Context.Session.GetString("UserRole");
+    var username = Context.Session.GetString("Username");
+    var profileImage = Context.Session.GetString("ProfileImage");
+    <div style="display: none;" id="debug-info">
+        UserId: @userId<br>
+        UserRole: @userRole<br>
+        Username: @username<br>
+        IsAuthenticated: @User.Identity.IsAuthenticated<br>
+        UserName: @User.Identity.Name<br>
+        Roles: @string.Join(",", User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value))
+    </div>
+}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-success fixed-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Home">
+            <i class="fas fa-utensils me-2"></i>TasteShare
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Home" asp-action="Home">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("About", "Home")">
+                        <i class="fas fa-info-circle me-1"></i>About
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Home" asp-action="PublicRecipe">
+                        <i class="fas fa-search me-1"></i>Browse Recipes
+                    </a>
+                </li>
+
+                <!-- Admin Menu - Session-based Role Check -->
+                @if (userRole == "admin")
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-crown me-1"></i>Admin
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Admin" asp-action="Ingredients">
+                                    <i class="fas fa-carrot me-2"></i>Ingredients
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Admin" asp-action="Users">
+                                    <i class="fas fa-users me-2"></i>Users
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Admin" asp-action="ReportedPosts">
+                                    <i class="fas fa-flag me-2"></i>Reported Posts
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+            </ul>
+
+            <!-- Right Side Navigation -->
+            <ul class="navbar-nav">
+                <!-- Favorites Link (Visible only when logged in) -->
+                @if (!string.IsNullOrEmpty(userId))
+                {
+                    <li class="nav-item favorites-nav">
+                        <a class="nav-link favorites-link position-relative" asp-controller="Profile" asp-action="Favorites" title="My Favorites">
+                            <i class="far fa-heart me-1"></i>
+                            <span class="d-none d-md-inline">Favorites</span>
+                            <span id="favoriteCount" class="favorites-count">(0)</span>
+                        </a>
+                    </li>
+                }
+
+                @if (!string.IsNullOrEmpty(userId))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            @if (!string.IsNullOrEmpty(profileImage))
+                            {
+                                <img src="@profileImage" alt="Profile" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user text-success" style="font-size: 0.8rem;"></i>
+                                </div>
+                            }
+                            <span>@username</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" asp-controller="Profile" asp-action="Profile">
+                                    <i class="fas fa-user me-2"></i>My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Profile" asp-action="Edit">
+                                    <i class="fas fa-edit me-2"></i>Edit Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Recipe" asp-action="Create">
+                                    <i class="fas fa-plus me-2"></i>Add Recipe
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" asp-controller="Account" asp-action="Logout" id="logoutForm" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item text-danger border-0 bg-transparent" style="width: 100%; text-align: left;">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light btn-sm ms-2" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">
+                            <i class="fas fa-user-plus me-1"></i>Register
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<style>
+    .navbar-scrolled {
+        background-color: #198754 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        transition: background-color 0.3s ease;
+    }
+
+    /* Favorites Link Styles */
+    .favorites-link {
+        position: relative;
+        color: rgba(255, 255, 255, 0.9) !important;
+        transition: all 0.3s ease;
+    }
+
+        .favorites-link:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+    .favorites-count {
+        position: absolute;
+        top: 0;
+        right: -5px;
+        background-color: #ff6b6b;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border: 2px solid #198754;
+    }
+
+    .favorites-nav {
+        margin-right: 15px;
+    }
+
+    /* Mobile responsive adjustments */
+    @@media (max-width: 991.98px) {
+        .favorites-nav {
+            margin-right: 0;
+            margin-bottom: 10px;
+        }
+
+        .favorites-link {
+            padding: 8px 15px;
+        }
+
+        .favorites-count {
+            position: static;
+            margin-left: 5px;
+            display: inline-block;
+        }
+    }
+</style>
+
+<script>
+    // Initialize navbar scroll effect
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('navbar-scrolled');
+        } else {
+            navbar.classList.remove('navbar-scrolled');
+        }
+    });
+
+    // User-specific favorites functions
+    function getCurrentUserId() {
+        // Try to get userId from a data attribute or from session
+        const userIdElement = document.getElementById('debug-info');
+        if (userIdElement) {
+            const text = userIdElement.textContent;
+            const match = text.match(/UserId:\s*([^\s<]+)/);
+            if (match) {
+                return match[1];
+            }
+        }
+        // Fallback to trying to parse from URL or sessionStorage
+        return sessionStorage.getItem('currentUserId') || 'anonymous';
+    }
+
+    // Get user-specific favorites key
+    function getUserFavoritesKey() {
+        const userId = getCurrentUserId();
+        return `recipeFavorites_${userId}`;
+    }
+
+    // Initialize and update favorites count
+    function updateFavoritesCount() {
+        try {
+            const favoritesKey = getUserFavoritesKey();
+            const favorites = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+            const favoriteCountElement = document.getElementById('favoriteCount');
+
+            if (favoriteCountElement) {
+                if (favorites.length > 0) {
+                    favoriteCountElement.textContent = favorites.length;
+                    favoriteCountElement.style.display = 'flex';
+                } else {
+                    favoriteCountElement.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            console.error('Error updating favorites count:', error);
+        }
+    }
+
+    // Store current user ID in sessionStorage
+    function storeCurrentUserId(userId) {
+        if (userId && userId !== 'anonymous') {
+            sessionStorage.setItem('currentUserId', userId);
+        }
+    }
+
+    // Clear favorites when user logs out
+    function clearUserFavoritesData() {
+        sessionStorage.removeItem('currentUserId');
+    }
+
+    // Update count on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Store current user ID if available
+        const currentUserId = getCurrentUserId();
+        if (currentUserId !== 'anonymous') {
+            storeCurrentUserId(currentUserId);
+        }
+
+        // Initialize user-specific favorites if not exists
+        const favoritesKey = getUserFavoritesKey();
+        if (!localStorage.getItem(favoritesKey)) {
+            localStorage.setItem(favoritesKey, JSON.stringify([]));
+        }
+
+        updateFavoritesCount();
+
+        // Listen for storage events to update count across tabs
+        window.addEventListener('storage', function(e) {
+            if (e.key && e.key.startsWith('recipeFavorites_')) {
+                updateFavoritesCount();
+            }
+        });
+
+        // Also update when user returns to page (for single tab changes)
+        window.addEventListener('focus', updateFavoritesCount);
+    });
+
+    // Function to refresh favorites count (call this after adding/removing favorites)
+    function refreshFavoritesCount() {
+        updateFavoritesCount();
+    }
+
+    // Make these functions available globally
+    window.getUserFavoritesKey = getUserFavoritesKey;
+    window.clearUserFavoritesData = clearUserFavoritesData;
+</script>

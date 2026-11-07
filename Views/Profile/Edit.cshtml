@@ -1,0 +1,244 @@
+﻿@model OnlineRecipeSharing.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Edit Profile - TasteShare";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit Profile</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Display success/error messages -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="_id" />
+
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="mb-3">
+                                    @if (!string.IsNullOrEmpty(Model.profile_image))
+                                    {
+                                        <img src="@Model.profile_image" alt="Profile Picture" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
+                                            <i class="fas fa-user text-muted" style="font-size: 4rem;"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ProfilePictureFile" class="form-label">Change Profile Picture</label>
+                                    <input asp-for="ProfilePictureFile" class="form-control" accept="image/*">
+                                    <span asp-validation-for="ProfilePictureFile" class="text-danger"></span>
+                                    <small class="text-muted">JPG, PNG, or GIF (max 5MB)</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-8">
+ 
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Full Name</h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label asp-for="FirstName" class="form-label">First Name</label>
+                                                    <input asp-for="FirstName" class="form-control">
+                                                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label asp-for="MiddleName" class="form-label">Middle Name</label>
+                                                    <input asp-for="MiddleName" class="form-control">
+                                                    <span asp-validation-for="MiddleName" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label asp-for="LastName" class="form-label">Last Name</label>
+                                                    <input asp-for="LastName" class="form-control">
+                                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="username" class="form-label">Username</label>
+                                    <input asp-for="username" class="form-control">
+                                    <span asp-validation-for="username" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="email" class="form-label">Email</label>
+                                    <input asp-for="email" class="form-control" type="email">
+                                    <span asp-validation-for="email" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="bio" class="form-label">About Me</label>
+                                    <textarea asp-for="bio" class="form-control" rows="4" placeholder="Tell us about yourself..."></textarea>
+                                    <span asp-validation-for="bio" class="text-danger"></span>
+                                    <small class="text-muted">Maximum 500 characters</small>
+                                </div>
+
+                                <!-- Account Information (Read-only) -->
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Account Information</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Role:</small>
+                                                <p class="mb-2">@Model.role</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Status:</small>
+                                                <p class="mb-2">
+                                                    @if (Model.is_active)
+                                                    {
+                                                        <span class="badge bg-success">Active</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary">Inactive</span>
+                                                    }
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Member Since:</small>
+                                                <p class="mb-2">@Model.date_created.ToString("MMM dd, yyyy")</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Last Login:</small>
+                                                <p class="mb-0">
+                                                    @if (Model.last_login.HasValue)
+                                                    {
+                                                        @Model.last_login.Value.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Never</span>
+                                                    }
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Profile" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-success">Save Changes</button>
+                        </div>
+                    </form>
+
+                    <!-- Account Management Section -->
+                    <hr class="my-4">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Account Management</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Deactivating your account will make your profile inaccessible and hide your recipes.</p>
+                            <form asp-action="Deactivate" method="post" onsubmit="return confirm('Are you sure you want to deactivate your account? This action cannot be undone.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-user-slash me-1"></i>Deactivate Account
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Character counter for bio
+        document.addEventListener('DOMContentLoaded', function() {
+            const bioTextarea = document.getElementById('bio');
+            const charCount = document.createElement('small');
+            charCount.className = 'text-muted float-end';
+            charCount.style.fontSize = '0.875rem';
+
+            if (bioTextarea) {
+                bioTextarea.parentNode.appendChild(charCount);
+
+                function updateCharCount() {
+                    const currentLength = bioTextarea.value.length;
+                    charCount.textContent = `${currentLength}/500 characters`;
+
+                    if (currentLength > 500) {
+                        charCount.className = 'text-danger float-end';
+                        charCount.style.fontSize = '0.875rem';
+                    } else {
+                        charCount.className = 'text-muted float-end';
+                        charCount.style.fontSize = '0.875rem';
+                    }
+                }
+
+                bioTextarea.addEventListener('input', updateCharCount);
+                updateCharCount(); // Initial count
+            }
+
+            // Preview profile picture before upload
+            const profilePictureInput = document.getElementById('ProfilePictureFile');
+            const profileImage = document.querySelector('img[alt="Profile Picture"]');
+            const profilePlaceholder = document.querySelector('.rounded-circle.bg-light');
+
+            if (profilePictureInput) {
+                profilePictureInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            if (profileImage) {
+                                profileImage.src = e.target.result;
+                            } else if (profilePlaceholder) {
+                                // Replace placeholder with actual image
+                                const newImg = document.createElement('img');
+                                newImg.src = e.target.result;
+                                newImg.alt = "Profile Picture";
+                                newImg.className = "rounded-circle";
+                                newImg.style.width = "150px";
+                                newImg.style.height = "150px";
+                                newImg.style.objectFit = "cover";
+                                profilePlaceholder.parentNode.replaceChild(newImg, profilePlaceholder);
+                            }
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+    </script>
+}

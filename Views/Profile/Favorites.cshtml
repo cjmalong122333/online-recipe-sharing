@@ -1,0 +1,735 @@
+﻿@{
+    ViewData["Title"] = "My Favorites";
+}
+
+<style>
+    /* Favorites Page Styles */
+    .favorites-container {
+        min-height: 70vh;
+    }
+
+    .favorites-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .favorites-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .favorites-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+    .favorites-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .favorites-count-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 20px;
+        padding: 0.25rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .favorite-card {
+        border: none;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .favorite-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, #28a745, #20c997);
+            border-radius: 5px 0 0 5px;
+        }
+
+        .favorite-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+    .favorite-card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .recipe-image-container {
+        width: 100%;
+        height: 180px;
+        overflow: hidden;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        position: relative;
+        background: #f8f9fa;
+    }
+
+    .recipe-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .favorite-card:hover .recipe-image {
+        transform: scale(1.05);
+    }
+
+    .recipe-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 1.1rem;
+    }
+
+    .recipe-category {
+        font-size: 0.85rem;
+        color: #28a745;
+        background: rgba(40, 167, 69, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+    }
+
+    .remove-favorite-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: all 0.2s ease;
+        background: white;
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+    }
+
+        .remove-favorite-btn:hover {
+            background-color: #dc3545;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+    .date-added {
+        font-size: 0.85rem;
+        color: #6c757d;
+        background: rgba(108, 117, 125, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+        .date-added i {
+            color: #28a745;
+        }
+
+    .view-recipe-btn {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        width: 100%;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+        .view-recipe-btn:hover {
+            background: linear-gradient(135deg, #218838, #1ba87e);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+    .image-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .image-placeholder i {
+            font-size: 3rem;
+            color: #adb5bd;
+        }
+
+    .empty-state {
+        padding: 4rem 1rem;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+
+    .browse-btn {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+        .browse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+            color: white;
+        }
+
+    .sort-controls {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .sort-btn {
+        border: 1px solid #dee2e6;
+        background: white;
+        color: #6c757d;
+        padding: 0.375rem 1rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+        .sort-btn:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .sort-btn.active {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+    /* Animation for new favorites */
+    .favorite-card.fade-in {
+        animation: fadeInUp 0.5s ease;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .favorites-header {
+            padding: 1.5rem;
+        }
+
+        .favorites-icon {
+            font-size: 2.5rem;
+        }
+
+        .recipe-title {
+            font-size: 1rem;
+        }
+
+        .recipe-image-container {
+            height: 150px;
+        }
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 3rem;
+    }
+
+        .loading-spinner .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: #28a745;
+        }
+</style>
+
+<div class="container favorites-container mt-5 pt-4">
+    <!-- Header Section -->
+    <div class="favorites-header position-relative">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-heart favorites-icon me-3"></i>
+                    <div>
+                        <h1 class="display-6 fw-bold mb-1">My Favorites</h1>
+                        <p class="mb-0 opacity-90">All your saved recipes in one place</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="favorites-count-badge" id="totalFavoritesCount">
+                    <i class="fas fa-heart me-1"></i>
+                    <span id="favoritesCount">0</span> recipes
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sort Controls -->
+    <div class="sort-controls">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="mb-0 text-dark">
+                    <i class="fas fa-sort me-2"></i>Sort By
+                </h5>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn sort-btn active" id="sortNewest">
+                        <i class="fas fa-calendar-alt me-1"></i>Newest
+                    </button>
+                    <button type="button" class="btn sort-btn" id="sortOldest">
+                        <i class="fas fa-calendar me-1"></i>Oldest
+                    </button>
+                    <button type="button" class="btn sort-btn" id="sortAlpha">
+                        <i class="fas fa-sort-alpha-down me-1"></i>A-Z
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading your favorite recipes...</p>
+    </div>
+
+    <!-- Favorites Grid -->
+    <div id="favoriteList" class="row g-4"></div>
+
+    <!-- Empty State (hidden by JavaScript) -->
+    <div id="emptyState" class="d-none">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="far fa-heart"></i>
+            </div>
+            <h3 class="fw-bold text-muted mb-3">No favorites yet</h3>
+            <p class="text-muted mb-4">Your favorite recipes will appear here. Start exploring and save the ones you love!</p>
+            <a href="@Url.Action("PublicRecipe", "Home")" class="btn browse-btn">
+                <i class="fas fa-search me-2"></i>Browse Recipes
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // User-specific favorites functions
+    function getCurrentUserId() {
+        const userIdElement = document.getElementById('debug-info');
+        if (userIdElement) {
+            const text = userIdElement.textContent;
+            const match = text.match(/UserId:\s*([^\s<]+)/);
+            if (match && match[1] && match[1] !== '') {
+                return match[1];
+            }
+        }
+        return sessionStorage.getItem('currentUserId') || 'anonymous';
+    }
+
+    // Get user-specific favorites key
+    function getUserFavoritesKey() {
+        const userId = getCurrentUserId();
+        return `recipeFavorites_${userId}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if user is logged in
+        const userId = getCurrentUserId();
+        if (userId === 'anonymous') {
+            // Redirect to login or show message
+            window.location.href = '/Account/Login?returnUrl=/Profile/Favorites';
+            return;
+        }
+
+        // Get user-specific favorites
+        const favoritesKey = getUserFavoritesKey();
+
+        // Initialize user-specific favorites if not exists
+        if (!localStorage.getItem(favoritesKey)) {
+            localStorage.setItem(favoritesKey, JSON.stringify([]));
+        }
+
+        let favorites = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+        const container = document.getElementById('favoriteList');
+        const emptyState = document.getElementById('emptyState');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const favoritesCount = document.getElementById('favoritesCount');
+        const totalFavoritesCount = document.getElementById('totalFavoritesCount');
+
+        // Initialize sort buttons
+        const sortNewestBtn = document.getElementById('sortNewest');
+        const sortOldestBtn = document.getElementById('sortOldest');
+        const sortAlphaBtn = document.getElementById('sortAlpha');
+
+        // Update count display
+        function updateCountDisplay() {
+            if (favoritesCount) {
+                favoritesCount.textContent = favorites.length;
+            }
+            if (totalFavoritesCount) {
+                totalFavoritesCount.textContent = `${favorites.length} ${favorites.length === 1 ? 'recipe' : 'recipes'}`;
+            }
+        }
+
+        // Fetch recipe details from API
+        async function fetchRecipeDetails(recipeId) {
+            try {
+                const response = await fetch(`/Recipe/GetRecipeDetails/${recipeId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data;
+                }
+            } catch (error) {
+                console.error('Error fetching recipe details:', error);
+            }
+            return null;
+        }
+
+        // Render favorites with images
+        async function renderFavorites(favoritesToRender) {
+            container.innerHTML = '';
+
+            if (favoritesToRender.length === 0) {
+                loadingSpinner.classList.add('d-none');
+                container.classList.add('d-none');
+                emptyState.classList.remove('d-none');
+                return;
+            }
+
+            // Show loading spinner
+            loadingSpinner.classList.remove('d-none');
+            container.classList.add('d-none');
+            emptyState.classList.add('d-none');
+
+            // Create an array of promises to fetch all recipe details
+            const recipePromises = favoritesToRender.map(async (favorite) => {
+                const details = await fetchRecipeDetails(favorite.id);
+                return { ...favorite, details };
+            });
+
+            // Wait for all recipes to be fetched
+            const recipesWithDetails = await Promise.all(recipePromises);
+
+            // Hide loading spinner
+            loadingSpinner.classList.add('d-none');
+            container.classList.remove('d-none');
+
+            recipesWithDetails.forEach((recipe, index) => {
+                const card = document.createElement('div');
+                card.className = 'col-md-4 col-lg-3';
+
+                // Get image URL (first image if available)
+                let imageUrl = '';
+                let imageAlt = recipe.title;
+
+                if (recipe.details && recipe.details.images && recipe.details.images.length > 0) {
+                    imageUrl = recipe.details.images[0];
+                }
+
+                // Get category
+                let category = '';
+                if (recipe.details && recipe.details.category) {
+                    category = recipe.details.category;
+                }
+
+                card.innerHTML = `
+                    <div class="favorite-card fade-in p-3">
+                        <div class="recipe-image-container position-relative">
+                            ${imageUrl ?
+                                `<img src="${imageUrl}" class="recipe-image" alt="${escapeHtml(imageAlt)}">` :
+                                `<div class="image-placeholder">
+                                    <i class="fas fa-utensils"></i>
+                                </div>`
+                            }
+                            <button class="remove-favorite-btn"
+                                    data-recipe-id="${recipe.id}"
+                                    title="Remove from favorites">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <h6 class="recipe-title" title="${escapeHtml(recipe.title)}">
+                                ${escapeHtml(recipe.title)}
+                            </h6>
+                            ${category ? `<span class="recipe-category">${escapeHtml(category)}</span>` : ''}
+                            <div class="mb-3">
+                                <span class="date-added">
+                                    <i class="far fa-calendar me-1"></i>
+                                    Saved on ${formatDate(recipe.addedAt)}
+                                </span>
+                            </div>
+                            <div>
+                                <a href="/Recipe/Details/${recipe.id}" class="view-recipe-btn">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    View Recipe
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Add animation delay for staggered effect
+                card.style.animationDelay = `${index * 0.1}s`;
+
+                container.appendChild(card);
+            });
+
+            // Add remove functionality
+            document.querySelectorAll('.remove-favorite-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const recipeId = this.getAttribute('data-recipe-id');
+                    const recipe = favorites.find(f => f.id === recipeId);
+                    const recipeTitle = recipe?.title || 'recipe';
+
+                    if (confirm(`Are you sure you want to remove "${recipeTitle}" from your favorites?`)) {
+                        removeFromFavorites(recipeId);
+                    }
+                });
+            });
+
+            updateCountDisplay();
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Remove from favorites (user-specific)
+        function removeFromFavorites(recipeId) {
+            const favoritesKey = getUserFavoritesKey();
+            let currentFavorites = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+            currentFavorites = currentFavorites.filter(fav => fav.id !== recipeId);
+            localStorage.setItem(favoritesKey, JSON.stringify(currentFavorites));
+
+            // Update local variable
+            favorites = currentFavorites;
+
+            // Re-render with current sort
+            applyCurrentSort();
+
+            // Show success message
+            showToast('Recipe removed from favorites', 'success');
+
+            // Update navbar count
+            if (typeof window.refreshFavoritesCount === 'function') {
+                window.refreshFavoritesCount();
+            }
+        }
+
+        // Sorting functions
+        function sortNewest() {
+            return [...favorites].sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+        }
+
+        function sortOldest() {
+            return [...favorites].sort((a, b) => new Date(a.addedAt) - new Date(b.addedAt));
+        }
+
+        function sortAlpha() {
+            return [...favorites].sort((a, b) => a.title.localeCompare(b.title));
+        }
+
+        // Apply current sort
+        function applyCurrentSort() {
+            let sortedFavorites;
+
+            if (sortNewestBtn.classList.contains('active')) {
+                sortedFavorites = sortNewest();
+            } else if (sortOldestBtn.classList.contains('active')) {
+                sortedFavorites = sortOldest();
+            } else if (sortAlphaBtn.classList.contains('active')) {
+                sortedFavorites = sortAlpha();
+            } else {
+                sortedFavorites = sortNewest(); // Default
+            }
+
+            renderFavorites(sortedFavorites);
+        }
+
+        // Sort button event listeners
+        sortNewestBtn.addEventListener('click', function() {
+            if (!this.classList.contains('active')) {
+                document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                renderFavorites(sortNewest());
+            }
+        });
+
+        sortOldestBtn.addEventListener('click', function() {
+            if (!this.classList.contains('active')) {
+                document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                renderFavorites(sortOldest());
+            }
+        });
+
+        sortAlphaBtn.addEventListener('click', function() {
+            if (!this.classList.contains('active')) {
+                document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                renderFavorites(sortAlpha());
+            }
+        });
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            // Create toast if it doesn't exist
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 3000
+            });
+            bsToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => {
+                toast.remove();
+            });
+        }
+
+        // Initial render
+        applyCurrentSort();
+
+        // Listen for storage events (for cross-tab updates)
+        window.addEventListener('storage', function(e) {
+            if (e.key && e.key.startsWith('recipeFavorites_')) {
+                const currentKey = getUserFavoritesKey();
+                if (e.key === currentKey) {
+                    favorites = JSON.parse(e.newValue || '[]');
+                    applyCurrentSort();
+                }
+            }
+        });
+
+        // Update navbar favorites count
+        setTimeout(() => {
+            if (window.refreshFavoritesCount) {
+                window.refreshFavoritesCount();
+            }
+        }, 100);
+    });
+</script>

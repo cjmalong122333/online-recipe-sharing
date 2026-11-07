@@ -1,0 +1,68 @@
+﻿<!-- Register Modal -->
+<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerModalLabel">Join TasteShare</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="Register" asp-controller="Account" method="post" id="registerForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label for="FirstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="Enter your first name" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="FirstName" data-valmsg-replace="true"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="MiddleName" class="form-label">Middle Name</label>
+                        <input type="text" class="form-control" id="MiddleName" name="MiddleName" placeholder="Enter your middle name" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="MiddleName" data-valmsg-replace="true"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="LastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Enter your last name" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="LastName" data-valmsg-replace="true"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="username" data-valmsg-replace="true"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="email" data-valmsg-replace="true"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Create a password" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="password" data-valmsg-replace="true"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ConfirmPassword" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="ConfirmPassword" name="ConfirmPassword" placeholder="Confirm your password" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="ConfirmPassword" data-valmsg-replace="true"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Create Account</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <p class="mb-0">
+                    Already have an account?
+                    <a href="#" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#loginModal" class="text-primary fw-bold">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

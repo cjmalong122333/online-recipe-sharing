@@ -1,0 +1,761 @@
+﻿@model OnlineRecipeSharing.Models.ViewModels.RecipeFilterViewModel
+@{
+    ViewData["Title"] = "All Recipes - TasteShare";
+    var isLoggedIn = Context.Session.GetString("UserId") != null;
+}
+
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold text-dark mb-1">Discover Recipes</h1>
+            <p class="text-muted">Find inspiration for your next culinary adventure</p>
+        </div>
+        @if (isLoggedIn)
+        {
+            <a href="@Url.Action("Create", "Recipe")" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Create Recipe
+            </a>
+        }
+    </div>
+
+    <!-- Hero Section for Non-Logged In Users -->
+    @if (!isLoggedIn)
+    {
+        <div class="hero-section">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-3">Share Your Culinary Creations!</h2>
+                    <p class="lead mb-0">Join our community of food enthusiasts and share your favorite recipes with the world. Get feedback, earn ratings, and inspire others.</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <button type="button" class="btn btn-white btn-lg px-4 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login to Share your Recipes
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filters Section -->
+    <div class="filter-section">
+        <h5 class="mb-3 text-dark"><i class="fas fa-filter me-2"></i>Filter Recipes</h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Tags</label>
+                <input type="text" name="tags" class="form-control" value="@Model.SelectedTags" placeholder="e.g., vegan, quick, italian">
+                <small class="text-muted">Separate multiple tags with commas</small>
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="d-flex gap-2 w-100">
+                    <button type="submit" class="btn btn-success flex-grow-1">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    <a href="@Url.Action("PublicRecipe", "Home")" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Recipes Count -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <p class="recipe-count">
+            @if (Model.Recipes.Any())
+            {
+                <span>Found <strong>@Model.Recipes.Count</strong> recipes</span>
+                @if (!string.IsNullOrEmpty(Model.SelectedCategory) || !string.IsNullOrEmpty(Model.SelectedTags))
+                {
+                    <span> matching your filters</span>
+                }
+            }
+            else
+            {
+                <span>No recipes found</span>
+            }
+        </p>
+    </div>
+
+    <!-- Recipes Grid -->
+    <div class="row g-4">
+        @if (Model.Recipes != null && Model.Recipes.Any())
+        {
+            @foreach (var recipe in Model.Recipes)
+            {
+                <div class="col-md-4">
+                    <div class="card recipe-card h-100">
+                        @if (recipe.images != null && recipe.images.Any())
+                        {
+                            <img src="@recipe.images[0]" class="card-img-top recipe-image" alt="@recipe.title" style="height: 200px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="card-img-top recipe-image bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-utensils text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        }
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@recipe.title</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <!-- Likes and Dislikes Badges -->
+                                    <span class="badge likes-badge">
+                                        <i class="fas fa-thumbs-up me-1"></i>
+                                        <span class="likes-count">@recipe.LikesCount</span>
+                                    </span>
+                                    <span class="badge dislikes-badge ms-1">
+                                        <i class="fas fa-thumbs-down me-1"></i>
+                                        <span class="dislikes-count">@recipe.DislikesCount</span>
+                                    </span>
+                                    <span class="badge bg-success ms-1">@recipe.category</span>
+                                </div>
+                                <div>
+                                    <!-- Show favorite button only if user is logged in -->
+                                    @if (isLoggedIn)
+                                    {
+                                        <button class="btn favorite-btn btn-sm me-1"
+                                                data-recipe-id="@recipe.recipe_id"
+                                                data-recipe-title="@recipe.title"
+                                                title="Add to favorites">
+                                            <i class="far fa-heart"></i>
+                                        </button>
+
+                                        <!-- Show report button only if user is logged in -->
+                                        <button class="btn btn-outline-danger btn-sm report-btn"
+                                                data-recipe-id="@recipe.recipe_id"
+                                                data-recipe-title="@recipe.title">
+                                            <i class="fa-solid fa-flag me-1"></i>Report
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                            <!-- Rest of your card content remains the same -->
+                            <p class="card-text text-muted flex-grow-1">
+                                @if (!string.IsNullOrEmpty(recipe.description))
+                                {
+                                    @(recipe.description.Length > 100 ? recipe.description.Substring(0, 100) + "..." : recipe.description)
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No description available</span>
+                                }
+                            </p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>@recipe.created_at.ToString("MMM dd, yyyy")
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-comment me-1"></i>@recipe.comments_count comments
+                                    </small>
+                                </div>
+                                <a href="@Url.Action("Details", "Recipe", new { id = recipe.recipe_id })" class="btn btn-outline-success btn-sm w-100">View Recipe</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="text-muted mb-3">No recipes found</h3>
+                    <p class="text-muted mb-4">Try adjusting your filters or create the first recipe in this category.</p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        @if (isLoggedIn)
+                        {
+                            <a href="@Url.Action("Create", "Recipe")" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>Create Recipe
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="#" class="btn btn-success" id="openLoginModal">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login to Create Recipes
+                            </a>
+                        }
+                        <a href="@Url.Action("PublicRecipe", "Home")" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Model.Recipes.Count >= 12)
+    {
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-success load-more-btn" id="loadMoreBtn">
+                <i class="fas fa-spinner fa-spin d-none me-2"></i>
+                Load More Recipes
+            </button>
+        </div>
+    }
+</div>
+
+<!-- Report Modal Container -->
+<div id="reportModalContainer"></div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Your existing code
+            const categorySelect = document.querySelector('select[name="category"]');
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function() {
+                    this.form.submit();
+                });
+            }
+
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', function() {
+                    const spinner = this.querySelector('.fa-spinner');
+                    spinner.classList.remove('d-none');
+                    this.disabled = true;
+                    setTimeout(() => {
+                        spinner.classList.add('d-none');
+                        this.disabled = false;
+                        alert('Load more functionality to be implemented with pagination');
+                    }, 1000);
+                });
+            }
+
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // SIMPLE REPORT BUTTON SOLUTION - Only if user is logged in
+            @if (isLoggedIn)
+            {
+                <text>
+                document.addEventListener('click', function(e) {
+                    if (e.target.closest('.report-btn')) {
+                        const recipeId = e.target.closest('.report-btn').getAttribute('data-recipe-id');
+                        console.log('Report button clicked for recipe:', recipeId);
+                        showSimpleReportModal(recipeId);
+                    }
+                });
+                </text>
+            }
+
+            // Simple modal without AJAX
+            function showSimpleReportModal(recipeId) {
+                // Create modal HTML directly
+                const modalHtml = `
+                    <div class="modal fade" id="simpleReportModal" tabindex="-1" aria-labelledby="simpleReportModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="simpleReportModalLabel">
+                                        <i class="fas fa-flag text-warning me-2"></i>Report Recipe
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="simpleReportForm">
+                                        <input type="hidden" id="simpleReportRecipeId" value="${recipeId}" />
+                                        <div class="mb-3">
+                                            <label for="simpleReportReason" class="form-label fw-semibold">Reason for reporting</label>
+                                            <select class="form-select" id="simpleReportReason" required>
+                                                <option value="">Select a reason</option>
+                                                <option value="Inappropriate content">Inappropriate content</option>
+                                                <option value="Spam or misleading">Spam or misleading</option>
+                                                <option value="Copyright infringement">Copyright infringement</option>
+                                                <option value="Harassment or bullying">Harassment or bullying</option>
+                                                <option value="False information">False information</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3" id="simpleCustomReasonContainer" style="display: none;">
+                                            <label for="simpleCustomReason" class="form-label fw-semibold">Please specify</label>
+                                            <textarea class="form-control" id="simpleCustomReason" rows="3" placeholder="Please provide more details..." maxlength="500"></textarea>
+                                            <div class="form-text"><span id="simpleCustomReasonCount">0</span>/500 characters</div>
+                                        </div>
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Your report will be reviewed by our team. We take all reports seriously.
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-warning" id="simpleSubmitReportBtn">
+                                        <i class="fas fa-paper-plane me-2"></i>Submit Report
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Remove existing modal if any
+                const existingModal = document.getElementById('simpleReportModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // Add modal to container
+                const modalContainer = document.getElementById('reportModalContainer');
+                modalContainer.innerHTML = modalHtml;
+
+                // Initialize modal functionality
+                initializeSimpleReportModal();
+
+                // Show modal
+                const modalElement = document.getElementById('simpleReportModal');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+
+            function initializeSimpleReportModal() {
+                const reportReason = document.getElementById('simpleReportReason');
+                const customReasonContainer = document.getElementById('simpleCustomReasonContainer');
+                const customReason = document.getElementById('simpleCustomReason');
+                const customReasonCount = document.getElementById('simpleCustomReasonCount');
+                const submitReportBtn = document.getElementById('simpleSubmitReportBtn');
+
+                // Show/hide custom reason field
+                if (reportReason) {
+                    reportReason.addEventListener('change', function() {
+                        if (this.value === 'Other') {
+                            customReasonContainer.style.display = 'block';
+                            if (customReason) customReason.required = true;
+                        } else {
+                            customReasonContainer.style.display = 'none';
+                            if (customReason) customReason.required = false;
+                        }
+                    });
+                }
+
+                // Character count for custom reason
+                if (customReason) {
+                    customReason.addEventListener('input', function() {
+                        if (customReasonCount) {
+                            customReasonCount.textContent = this.value.length;
+                        }
+                    });
+                }
+
+                // Submit report
+                if (submitReportBtn) {
+                    submitReportBtn.addEventListener('click', async function() {
+                        const recipeId = document.getElementById('simpleReportRecipeId')?.value;
+                        let reason = reportReason?.value;
+
+                        if (!recipeId) {
+                            alert('Recipe ID is missing.');
+                            return;
+                        }
+
+                        if (reason === 'Other') {
+                            reason = customReason?.value?.trim();
+                            if (!reason) {
+                                alert('Please provide details for your report.');
+                                return;
+                            }
+                        }
+
+                        if (!reason) {
+                            alert('Please select a reason for reporting.');
+                            return;
+                        }
+
+                        // Disable button and show loading state
+                        submitReportBtn.disabled = true;
+                        submitReportBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+
+                        try {
+                            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                            const response = await fetch('/Reports/Create', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'RequestVerificationToken': token
+                                },
+                                body: `recipeId=${encodeURIComponent(recipeId)}&reason=${encodeURIComponent(reason)}`
+                            });
+
+                            const result = await response.json();
+
+                            if (result.success) {
+                                // Close modal
+                                const modal = bootstrap.Modal.getInstance(document.getElementById('simpleReportModal'));
+                                if (modal) modal.hide();
+                                showToast(result.message, 'success');
+                            } else {
+                                showToast(result.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Error submitting report:', error);
+                            showToast('An error occurred while submitting the report.', 'error');
+                        } finally {
+                            // Reset button state
+                            submitReportBtn.disabled = false;
+                            submitReportBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Report';
+                        }
+                    });
+                }
+            }
+
+            // Toast notification function
+            function showToast(message, type = 'info') {
+                // Create toast element
+                const toast = document.createElement('div');
+                toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0`;
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                `;
+
+                // Add to page
+                const toastContainer = document.getElementById('toast-container') || createToastContainer();
+                toastContainer.appendChild(toast);
+
+                // Initialize and show toast
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+
+                // Remove from DOM after hide
+                toast.addEventListener('hidden.bs.toast', () => {
+                    toast.remove();
+                });
+            }
+
+            function createToastContainer() {
+                const container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                container.style.zIndex = '9999';
+                document.body.appendChild(container);
+                return container;
+            }
+
+            // Add subtle animation to cards when they come into view
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.recipe-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                observer.observe(card);
+            });
+        });
+
+        // FAVORITE FUNCTIONALITY - Only initialize if user is logged in
+        @if (isLoggedIn)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Get current user ID
+                function getCurrentUserId() {
+                    const userIdElement = document.getElementById('debug-info');
+                    if (userIdElement) {
+                        const text = userIdElement.textContent;
+                        const match = text.match(/UserId:\s*([^\s]+)/);
+                        if (match && match[1] && match[1] !== '') {
+                            return match[1];
+                        }
+                    }
+                    return sessionStorage.getItem('currentUserId') || 'anonymous';
+                }
+
+                // Get user-specific favorites key
+                function getUserFavoritesKey() {
+                    const userId = getCurrentUserId();
+                    return `recipeFavorites_${userId}`;
+                }
+
+                // Initialize user-specific favorites if not exists
+                const favoritesKey = getUserFavoritesKey();
+                if (!localStorage.getItem(favoritesKey)) {
+                    localStorage.setItem(favoritesKey, JSON.stringify([]));
+                }
+
+                // Load and display favorite status for all recipes
+                initializeFavoriteButtons();
+
+                // Handle favorite button clicks
+                document.addEventListener('click', function(e) {
+                    const favoriteBtn = e.target.closest('.favorite-btn');
+                    if (favoriteBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const userId = getCurrentUserId();
+                        if (userId === 'anonymous') {
+                            // User not logged in - redirect to login
+                            const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                            loginModal.show();
+                            return;
+                        }
+
+                        const recipeId = favoriteBtn.getAttribute('data-recipe-id');
+                        const recipeTitle = favoriteBtn.getAttribute('data-recipe-title');
+
+                        if (!recipeId || !recipeTitle) {
+                            console.error('Missing recipe data');
+                            return;
+                        }
+
+                        toggleFavorite(recipeId, recipeTitle, favoriteBtn);
+                    }
+                });
+            });
+
+            // Get user-specific favorites key
+            function getUserFavoritesKey() {
+                const userId = getCurrentUserId();
+                return `recipeFavorites_${userId}`;
+            }
+
+            // Initialize favorite buttons with their current status
+            function initializeFavoriteButtons() {
+                const favoritesKey = getUserFavoritesKey();
+                const favorites = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+
+                document.querySelectorAll('.favorite-btn').forEach(btn => {
+                    const recipeId = btn.getAttribute('data-recipe-id');
+
+                    if (favorites.some(fav => fav.id === recipeId)) {
+                        // Recipe is already a favorite
+                        btn.innerHTML = '<i class="fas fa-heart text-danger"></i>';
+                        btn.classList.add('active');
+                        btn.title = 'Remove from favorites';
+                    } else {
+                        // Recipe is not a favorite
+                        btn.innerHTML = '<i class="far fa-heart"></i>';
+                        btn.classList.remove('active');
+                        btn.title = 'Add to favorites';
+                    }
+                });
+            }
+
+            // Toggle favorite status
+            function toggleFavorite(recipeId, recipeTitle, button) {
+                const favoritesKey = getUserFavoritesKey();
+                let favorites = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+
+                // Check if recipe is already in favorites
+                const existingIndex = favorites.findIndex(fav => fav.id === recipeId);
+
+                if (existingIndex >= 0) {
+                    // Remove from favorites
+                    favorites.splice(existingIndex, 1);
+                    localStorage.setItem(favoritesKey, JSON.stringify(favorites));
+
+                    // Update button
+                    button.innerHTML = '<i class="far fa-heart"></i>';
+                    button.classList.remove('active');
+                    button.title = 'Add to favorites';
+
+                    showToast(`Removed "${recipeTitle}" from favorites`, 'success');
+                } else {
+                    // Add to favorites
+                    const newFavorite = {
+                        id: recipeId,
+                        title: recipeTitle,
+                        addedAt: new Date().toISOString(),
+                        userId: getCurrentUserId() // Store which user added it
+                    };
+
+                    favorites.push(newFavorite);
+                    localStorage.setItem(favoritesKey, JSON.stringify(favorites));
+
+                    // Update button
+                    button.innerHTML = '<i class="fas fa-heart text-danger"></i>';
+                    button.classList.add('active');
+                    button.title = 'Remove from favorites';
+
+                    showToast(`Added "${recipeTitle}" to favorites`, 'success');
+                }
+
+                // Update favorite count display
+                if (typeof window.refreshFavoritesCount === 'function') {
+                    window.refreshFavoritesCount();
+                }
+            }
+            </text>
+        }
+    </script>
+}
+
+<style>
+    .recipe-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+    .hero-section {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        border-left: 4px solid #28a745;
+    }
+
+    .likes-badge {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+
+    .dislikes-badge {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+    }
+
+    .image-placeholder {
+        height: 200px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+    }
+
+    .recipe-image {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .recipe-card:hover .recipe-image {
+        transform: scale(1.05);
+    }
+
+    .overflow-hidden {
+        overflow: hidden;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
+    /* Report Button Styles */
+    .report-btn {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #ffc107;
+        color: #ffc107;
+        transition: all 0.3s ease;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+
+        .report-btn:hover {
+            background-color: #ffc107;
+            color: #000;
+            transform: scale(1.05);
+        }
+
+    /* Ensure the modal z-index is high enough */
+    .modal {
+        z-index: 1060;
+    }
+
+    /* Toast container */
+    .toast-container {
+        z-index: 9999;
+    }
+
+    .likes-count, .dislikes-count {
+        font-weight: bold;
+    }
+
+    .favorite-btn {
+        background: none;
+        border: none;
+        color: #6c757d;
+        padding: 0.25rem 0.5rem;
+        transition: all 0.3s ease;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+        .favorite-btn:hover {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.active {
+            color: #dc3545;
+        }
+
+            .favorite-btn.active:hover {
+                background-color: rgba(220, 53, 69, 0.2);
+            }
+
+    /* Optional: Add a header link to favorites */
+    .favorites-link {
+        position: relative;
+    }
+
+    .favorites-count {
+        position: absolute;
+        top: -5px;
+        right: -10px;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>

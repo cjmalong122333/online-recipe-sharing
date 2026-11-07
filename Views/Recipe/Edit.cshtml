@@ -1,0 +1,298 @@
+﻿@model OnlineRecipeSharing.Models.ViewModels.RecipeViewModel
+@{
+    ViewData["Title"] = "Edit Recipe - TasteShare";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-white py-3">
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Recipe</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Add validation summary at the top -->
+                    <div asp-validation-summary="All" class="alert alert-danger"></div>
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                    }
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                    }
+
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data" id="editRecipeForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="recipe_id" />
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group mb-3">
+                                    <label asp-for="title" class="form-label">Recipe Title *</label>
+                                    <input asp-for="title" class="form-control" placeholder="Enter recipe title">
+                                    <span asp-validation-for="title" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="description" class="form-label">Description *</label>
+                                    <textarea asp-for="description" class="form-control" rows="3" placeholder="Describe your recipe..."></textarea>
+                                    <span asp-validation-for="description" class="text-danger"></span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="category" class="form-label">Category *</label>
+                                            <select asp-for="category" class="form-select">
+                                                <option value="">Select a category</option>
+                                                @foreach (var category in ViewBag.Categories)
+                                                {
+                                                    <option value="@category" selected="@(Model.category == category)">@category</option>
+                                                }
+                                            </select>
+                                            <span asp-validation-for="category" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="status" class="form-label">Recipe Visibility *</label>
+                                            <select asp-for="status" class="form-select">
+                                                <option value="public" selected="@(Model.status == "public")">Public - Everyone can see</option>
+                                                <option value="private" selected="@(Model.status == "private")">Private - Only you can see</option>
+                                            </select>
+                                            <small class="text-muted">Choose who can see your recipe</small>
+                                            <span asp-validation-for="status" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="tags_input" class="form-label">Tags</label>
+                                    <input asp-for="tags_input" class="form-control" placeholder="e.g. vegan, quick, filipino (separate with commas)">
+                                    <small class="text-muted">Add tags to help others find your recipe</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <!-- Current Images -->
+                                @if (Model.images != null && Model.images.Any())
+                                {
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Current Images</label>
+                                        <div class="row g-2">
+                                            @foreach (var image in Model.images)
+                                            {
+                                                <div class="col-6">
+                                                    <img src="@image" class="img-thumbnail w-100" style="height: 80px; object-fit: cover;" alt="Recipe image">
+                                                </div>
+                                            }
+                                        </div>
+                                        <small class="text-muted">Existing images will be kept. New images will be added.</small>
+                                    </div>
+                                }
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="image_files" class="form-label">Add More Images</label>
+                                    <input asp-for="image_files" class="form-control" multiple accept="image/*">
+                                    <small class="text-muted">You can upload multiple images</small>
+                                </div>
+
+                                <!-- Recipe Info Card -->
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title"><i class="fas fa-info-circle me-2"></i>Recipe Info</h6>
+                                        <div class="small text-muted">
+                                            <p><strong>Created:</strong> @Model.created_at.ToString("MMM dd, yyyy")</p>
+                                            <p><strong>Last Updated:</strong> @Model.updated_at.ToString("MMM dd, yyyy")</p>
+                                            <p><strong>Upvotes:</strong> @Model.upvotes</p>
+                                            <p><strong>Comments:</strong> @Model.comments_count</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Ingredients *</label>
+                            <div id="ingredients-container">
+                                @for (int i = 0; i < Model.ingredients.Count; i++)
+                                {
+                                    <div class="input-group mb-2">
+                                        <input asp-for="ingredients[i]" class="form-control" placeholder="Enter ingredient" value="@Model.ingredients[i]">
+                                        <button type="button" class="btn btn-outline-danger remove-ingredient" onclick="removeIngredient(this)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="addIngredient()">
+                                <i class="fas fa-plus me-1"></i>Add Ingredient
+                            </button>
+                            <span asp-validation-for="ingredients" class="text-danger d-block mt-1"></span>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Steps *</label>
+                            <div id="steps-container">
+                                @for (int i = 0; i < Model.steps.Count; i++)
+                                {
+                                    <div class="mb-3 step-item">
+                                        <label class="form-label">Step @(i + 1)</label>
+                                        <div class="input-group">
+                                            <textarea asp-for="steps[i]" class="form-control" rows="2" placeholder="Describe this step">@Model.steps[i]</textarea>
+                                            <button type="button" class="btn btn-outline-danger remove-step" onclick="removeStep(this)">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="addStep()">
+                                <i class="fas fa-plus me-1"></i>Add Step
+                            </button>
+                            <span asp-validation-for="steps" class="text-danger d-block mt-1"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="@Url.Action("Details", "Recipe", new { id = Model.recipe_id })" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-warning" id="submitBtn">Update Recipe</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Ingredients management
+        function addIngredient() {
+            const container = document.getElementById('ingredients-container');
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input name="ingredients[${index}]" class="form-control" placeholder="Enter ingredient" required>
+                <button type="button" class="btn btn-outline-danger remove-ingredient" onclick="removeIngredient(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeIngredient(button) {
+            if (document.getElementById('ingredients-container').children.length > 1) {
+                button.closest('.input-group').remove();
+                reindexIngredients();
+            }
+        }
+
+        function reindexIngredients() {
+            const container = document.getElementById('ingredients-container');
+            const inputs = container.querySelectorAll('input[name^="ingredients"]');
+            inputs.forEach((input, index) => {
+                input.name = `ingredients[${index}]`;
+            });
+        }
+
+        // Steps management
+        function addStep() {
+            const container = document.getElementById('steps-container');
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'mb-3 step-item';
+            div.innerHTML = `
+                <label class="form-label">Step ${index + 1}</label>
+                <div class="input-group">
+                    <textarea name="steps[${index}]" class="form-control" rows="2" placeholder="Describe this step" required></textarea>
+                    <button type="button" class="btn btn-outline-danger remove-step" onclick="removeStep(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeStep(button) {
+            if (document.getElementById('steps-container').children.length > 1) {
+                button.closest('.step-item').remove();
+                reindexSteps();
+            }
+        }
+
+        function reindexSteps() {
+            const container = document.getElementById('steps-container');
+            const items = container.querySelectorAll('.step-item');
+            items.forEach((item, index) => {
+                const label = item.querySelector('label');
+                const textarea = item.querySelector('textarea');
+                label.textContent = `Step ${index + 1}`;
+                textarea.name = `steps[${index}]`;
+            });
+        }
+
+        // Form validation and submission
+        document.addEventListener('DOMContentLoaded', function() {
+            // Form submission handler
+            const form = document.getElementById('editRecipeForm');
+            form.addEventListener('submit', function(e) {
+                // Validate that ingredients and steps are not empty
+                const ingredientInputs = document.querySelectorAll('input[name^="ingredients"]');
+                const stepInputs = document.querySelectorAll('textarea[name^="steps"]');
+
+                let hasEmptyIngredients = false;
+                let hasEmptySteps = false;
+
+                ingredientInputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        hasEmptyIngredients = true;
+                        input.classList.add('is-invalid');
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+
+                stepInputs.forEach(textarea => {
+                    if (!textarea.value.trim()) {
+                        hasEmptySteps = true;
+                        textarea.classList.add('is-invalid');
+                    } else {
+                        textarea.classList.remove('is-invalid');
+                    }
+                });
+
+                if (hasEmptyIngredients || hasEmptySteps) {
+                    e.preventDefault();
+                    alert('Please fill in all ingredients and steps.');
+                    return false;
+                }
+
+                // Show loading state
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+                submitBtn.disabled = true;
+            });
+        });
+
+        // Real-time validation
+        document.addEventListener('input', function(e) {
+            if (e.target.name && (e.target.name.startsWith('ingredients') || e.target.name.startsWith('steps'))) {
+                if (e.target.value.trim()) {
+                    e.target.classList.remove('is-invalid');
+                }
+            }
+        });
+    </script>
+}

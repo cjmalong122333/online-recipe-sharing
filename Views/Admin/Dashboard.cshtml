@@ -1,0 +1,745 @@
+﻿@using OnlineRecipeSharing.Models.ViewModels
+@model AdminDashboardViewModel
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    /* Dashboard Styles */
+    body {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-family: 'Poppins', sans-serif;
+        min-height: 100vh;
+    }
+
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card-metric {
+        border: none;
+        border-radius: 20px;
+        color: #fff;
+        padding: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+        .card-metric::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+        }
+
+        .card-metric:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+    .bg-users {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .bg-recipes {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .bg-reports {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .bg-pending {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    }
+
+    .card-metric h4 {
+        font-size: 2.2rem;
+        margin-bottom: 5px;
+        font-weight: 700;
+    }
+
+    .card-metric p {
+        margin: 0;
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .metric-icon {
+        font-size: 2.8rem;
+        opacity: 0.8;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    /* Add these styles to your existing CSS */
+
+    .clickable-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: all 0.3s ease;
+    }
+
+        .clickable-link:hover {
+            text-decoration: none;
+            color: inherit;
+        }
+
+    /* Ensure the entire card area is clickable */
+    .top-post-item,
+    .top-user-item {
+        position: relative;
+    }
+
+    /* Add a subtle pointer cursor to indicate clickability */
+    .stats-list a {
+        cursor: pointer;
+    }
+
+    /* Improve focus states for accessibility */
+    .clickable-link:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+        border-radius: 12px;
+    }
+
+    /* Add a subtle hover effect on the entire link */
+    .clickable-link:hover .top-post-item,
+    .clickable-link:hover .top-user-item {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        transform: translateX(8px);
+        border-left-color: #667eea;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Chart and Stats Cards */
+    .stats-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        background: white;
+        overflow: hidden;
+        height: 100%;
+    }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+
+        .stats-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 20px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+    .chart-container {
+        position: relative;
+        height: 250px;
+        padding: 20px;
+    }
+
+    /* Recent Activity Cards */
+    .activity-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        background: white;
+        height: 100%;
+    }
+
+        .activity-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+
+        .activity-card .card-header {
+            background: linear-gradient(135deg, #1cc88a 0%, #00b09b 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 20px;
+            font-size: 1.1rem;
+        }
+
+    .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f3f4;
+        transition: background-color 0.2s ease;
+    }
+
+        .list-item:hover {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding-left: 15px;
+            padding-right: 15px;
+            margin: 0 -15px;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+    .top-user-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #f1f3f4;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border-radius: 12px;
+        margin: 5px 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-left: 4px solid transparent;
+    }
+
+        .top-user-item:hover {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            transform: translateX(8px);
+            border-left-color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .top-user-item:last-child {
+            border-bottom: none;
+        }
+
+    .top-post-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #f1f3f4;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border-radius: 12px;
+        margin: 5px 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-left: 4px solid transparent;
+    }
+
+        .top-post-item:hover {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            transform: translateX(8px);
+            border-left-color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .top-post-item:last-child {
+            border-bottom: none;
+        }
+
+    .user-rank, .recipe-rank {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 15px;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        flex-shrink: 0;
+    }
+
+    .rank-1 {
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    }
+
+    .rank-2 {
+        background: linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%);
+        box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+    }
+
+    .rank-3 {
+        background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+        box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+    }
+
+    .user-info, .recipe-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .user-name, .recipe-title {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 4px;
+        transition: color 0.2s ease;
+        font-size: 1rem;
+        line-height: 1.3;
+    }
+
+    .top-user-item:hover .user-name,
+    .top-post-item:hover .recipe-title {
+        color: #667eea;
+    }
+
+    .user-stats, .recipe-stats {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .badge-recipes, .badge-likes {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+        flex-shrink: 0;
+    }
+
+    .badge-likes {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    }
+
+    .post-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 0.8rem;
+        color: #7f8c8d;
+        align-items: center;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        color: black;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(255,255,255,0.7);
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+        .stat-item:hover {
+            background: rgba(255,255,255,0.9);
+            transform: scale(1.05);
+        }
+
+    .text-muted {
+        color: #6c757d !important;
+    }
+
+    .clickable-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .animate-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .view-all-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+        .view-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+    .stats-content {
+        padding: 20px;
+        height: calc(100% - 70px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stats-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+    /* Custom scrollbar */
+    .stats-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .stats-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .stats-list::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+
+        .stats-list::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+    .recipe-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .recipe-main {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .recipe-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+    }
+</style>
+
+<div class="container-fluid py-4 dashboard-container">
+    <h1><i class="fa-solid fa-gauge-high"></i> Admin Dashboard</h1>
+
+    <!-- Alerts -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Metric Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="card-metric bg-users d-flex justify-content-between align-items-center animate-card">
+                <div>
+                    <h4>@Model.TotalUsers</h4>
+                    <p>Total Users</p>
+                </div>
+                <i class="fa-solid fa-users-line metric-icon"></i>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card-metric bg-recipes d-flex justify-content-between align-items-center animate-card" style="animation-delay: 0.1s;">
+                <div>
+                    <h4>@Model.TotalRecipes</h4>
+                    <p>Total Recipes</p>
+                </div>
+                <i class="fa-solid fa-utensils metric-icon"></i>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-12">
+            <div class="card-metric bg-reports d-flex justify-content-between align-items-center animate-card" style="animation-delay: 0.2s;">
+                <div>
+                    <h4>@Model.TotalReports</h4>
+                    <p>Total Reports</p>
+                </div>
+                <i class="fa-solid fa-flag metric-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Row -->
+    <div class="row g-4 mb-4">
+        <!-- Most Used Ingredients Chart -->
+        <div class="col-xl-4 col-lg-6">
+            <div class="stats-card animate-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-chart-pie me-2"></i>Most Used Ingredients
+                </div>
+                <div class="card-body p-0">
+                    <div class="chart-container">
+                        <canvas id="ingredientsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Recipes -->
+        <div class="col-xl-4 col-lg-6">
+            <div class="stats-card animate-card" style="animation-delay: 0.1s;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fa-solid fa-trophy me-2"></i>Top 3 Recipes
+                    </div>
+
+                </div>
+                <div class="stats-content">
+                    <div class="stats-list">
+                        @if (Model.TopRecipes != null && Model.TopRecipes.Count > 0)
+                        {
+                            var topThreeRecipes = Model.TopRecipes.Take(3).ToList();
+                            var rank = 1;
+                            @foreach (var recipe in topThreeRecipes)
+                            {
+                                var recipeLikes = ViewData["RecipeLikes"] as Dictionary<string, int>;
+                                var likeCount = recipeLikes?.ContainsKey(recipe.recipe_id) == true ? recipeLikes[recipe.recipe_id] : 0;
+
+                                <a href="@Url.Action("Details", "Recipe", new { id = recipe.recipe_id })" class="clickable-link" title="View recipe details">
+                                    <div class="top-post-item">
+                                        <div class="recipe-content">
+                                            <div class="recipe-rank @(rank == 1 ? "rank-1" : rank == 2 ? "rank-2" : "rank-3")">@rank</div>
+                                            <div class="recipe-info">
+                                                <div class="recipe-title">
+                                                    @recipe.title
+                                                </div>
+                                                <div class="recipe-meta">
+                                                    <span class="stat-item">
+                                                        <i class="fa-solid fa-heart text-danger"></i>
+                                                        <strong>@likeCount</strong> likes
+                                                    </span>
+                                                    <span class="stat-item">
+                                                        <i class="fa-solid fa-calendar text-info"></i>
+                                                        @recipe.created_at.ToString("MMM dd")
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span class="badge-likes">@likeCount</span>
+                                        </div>
+                                    </div>
+                                </a>
+                                rank++;
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                <i class="fa-solid fa-utensils"></i>
+                                <p class="mb-0">No recipes found</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Users -->
+        <div class="col-xl-4 col-lg-6">
+            <div class="stats-card animate-card" style="animation-delay: 0.2s;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fa-solid fa-crown me-2"></i>Top 3 Contributors
+                    </div>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-list">
+                        @if (Model.TopUsers != null && Model.TopUsers.Count > 0)
+                        {
+                            var topThreeUsers = Model.TopUsers.Take(3).ToList();
+                            var rank = 1;
+                            @foreach (var user in topThreeUsers)
+                            {
+                                <a href="@Url.Action("View", "Profile", new { username = user.username })" class="clickable-link" title="View user profile">
+                                    <div class="top-user-item">
+                                        <div class="user-rank @(rank == 1 ? "rank-1" : rank == 2 ? "rank-2" : "rank-3")">@rank</div>
+                                        <div class="user-info">
+                                            <div class="user-name">
+                                                @user.username
+                                            </div>
+                                            <div class="user-stats">
+                                                <i class="fa-solid fa-utensils text-success"></i>
+                                                <span>@user.RecipeCount recipes shared</span>
+                                            </div>
+                                        </div>
+                                        <span class="badge-recipes">@user.RecipeCount</span>
+                                    </div>
+                                </a>
+                                rank++;
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                <i class="fa-solid fa-users"></i>
+                                <p class="mb-0">No contributors found</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ingredients Chart with real data
+        const ingredientsCtx = document.getElementById('ingredientsChart').getContext('2d');
+
+        // Prepare data for JavaScript from server model
+        @{
+                // Convert model data to JSON
+                var ingredientsJson = Json.Serialize(Model.TopIngredients);
+                var countsJson = Json.Serialize(Model.IngredientCounts);
+
+                // Generate colors
+                var chartColors = new List<string> {
+                                "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD",
+                                "#98D8C8", "#F7B7A3", "#A1C6EA", "#B5EAD7"
+                        };
+                var colorsJson = Json.Serialize(chartColors);
+        }
+
+        const chartLabels = @Html.Raw(ingredientsJson);
+        const chartData = @Html.Raw(countsJson);
+        const chartColors = @Html.Raw(colorsJson);
+
+        // Check if we have data
+        if (chartLabels && chartLabels.length > 0 && chartData && chartData.length > 0) {
+            // Calculate percentages for tooltip
+            const total = chartData.reduce((a, b) => a + b, 0);
+            const percentages = chartData.map(count => {
+                return total > 0 ? Math.round((count / total) * 100) : 0;
+            });
+
+            // Use only as many colors as we have data points
+            const slicedColors = chartColors.slice(0, chartData.length);
+
+            const ingredientsChart = new Chart(ingredientsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: slicedColors,
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: {
+                                    size: 11,
+                                    family: "'Poppins', sans-serif"
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: {
+                                family: "'Poppins', sans-serif",
+                                size: 12
+                            },
+                            bodyFont: {
+                                family: "'Poppins', sans-serif",
+                                size: 11
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = percentages[context.dataIndex] || 0;
+                                    return `${label}: ${value} recipes (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        } else {
+            // Show empty state if no data
+            ingredientsCtx.canvas.parentElement.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-chart-pie fa-3x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No ingredient data available</p>
+                </div>
+            `;
+        }
+
+        // Add animation to cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animated cards
+        document.querySelectorAll('.animate-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    });
+</script>

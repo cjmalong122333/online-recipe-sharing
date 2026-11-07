@@ -1,0 +1,212 @@
+﻿@model string
+
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="reportModalLabel">
+                    <i class="fa-solid fa-flag me-2"></i>Report Recipe
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm">
+                    <input type="hidden" id="reportRecipeId" name="recipeId">
+                    <div class="mb-3">
+                        <label for="reportReason" class="form-label fw-semibold">Reason for Reporting *</label>
+                        <select class="form-select" id="reportReason" name="reason" required>
+                            <option value="">Select a reason</option>
+                            <option value="Inappropriate Content">Inappropriate Content</option>
+                            <option value="Spam or Misleading">Spam or Misleading</option>
+                            <option value="Copyright Violation">Copyright Violation</option>
+                            <option value="Harassment or Hate Speech">Harassment or Hate Speech</option>
+                            <option value="False Information">False Information</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reportDescription" class="form-label fw-semibold">Additional Details (Optional)</label>
+                        <textarea class="form-control" id="reportDescription" name="description" rows="3"
+                                  placeholder="Please provide any additional details about your report..."></textarea>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-info-circle me-2"></i>
+                        Your report will be reviewed by our moderation team. We take all reports seriously.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="submitReport">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Submit Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Report button click handler
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.report-btn')) {
+                const button = e.target.closest('.report-btn');
+                const recipeId = button.getAttribute('data-recipe-id');
+                const recipeTitle = button.getAttribute('data-recipe-title');
+
+                openReportModal(recipeId, recipeTitle);
+            }
+        });
+
+        // Submit report handler
+        document.getElementById('submitReport').addEventListener('click', function() {
+            submitReport();
+        });
+
+        // Enter key support in description field
+        document.getElementById('reportDescription').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                submitReport();
+            }
+        });
+    });
+
+    function openReportModal(recipeId, recipeTitle) {
+        // Check if user is logged in
+        const isLoggedIn = @(User.Identity.IsAuthenticated ? "true" : "false");
+
+        if (!isLoggedIn) {
+            showToast('Please log in to report recipes.', 'warning');
+            return;
+        }
+
+        // Set recipe ID in the form
+        document.getElementById('reportRecipeId').value = recipeId;
+
+        // Update modal title with recipe name
+        const modalTitle = document.getElementById('reportModalLabel');
+        modalTitle.innerHTML = `<i class="fa-solid fa-flag me-2"></i>Report Recipe: ${recipeTitle}`;
+
+        // Reset form
+        document.getElementById('reportForm').reset();
+
+        // Show modal
+        const reportModal = new bootstrap.Modal(document.getElementById('reportModal'));
+        reportModal.show();
+    }
+
+    function submitReport() {
+        const form = document.getElementById('reportForm');
+        const recipeId = document.getElementById('reportRecipeId').value;
+        const reason = document.getElementById('reportReason').value;
+        const description = document.getElementById('reportDescription').value;
+
+        // Validate form
+        if (!reason) {
+            showToast('Please select a reason for reporting.', 'warning');
+            document.getElementById('reportReason').focus();
+            return;
+        }
+
+        // Show loading state
+        const submitBtn = document.getElementById('submitReport');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Submitting...';
+        submitBtn.disabled = true;
+
+        // Prepare data
+        const formData = new FormData();
+        formData.append('recipeId', recipeId);
+        formData.append('reason', reason);
+        formData.append('description', description || '');
+        formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+        // Submit report
+        fetch('@Url.Action("Create", "Reports")', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                // Close modal
+                const reportModal = bootstrap.Modal.getInstance(document.getElementById('reportModal'));
+                reportModal.hide();
+
+                // Optional: Update UI to show recipe has been reported
+                const reportButtons = document.querySelectorAll(`.report-btn[data-recipe-id="${recipeId}"]`);
+                reportButtons.forEach(btn => {
+                    btn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Reported';
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-outline-secondary');
+                    btn.disabled = true;
+                });
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting report:', error);
+            showToast('An error occurred while submitting your report. Please try again.', 'error');
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    }
+
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fa-solid ${getToastIcon(type)} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+
+        // Remove toast after it's hidden
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    function getToastIcon(type) {
+        const icons = {
+            'success': 'fa-check-circle',
+            'error': 'fa-exclamation-circle',
+            'warning': 'fa-exclamation-triangle',
+            'info': 'fa-info-circle'
+        };
+        return icons[type] || 'fa-info-circle';
+    }
+</script>

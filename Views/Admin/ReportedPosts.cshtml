@@ -1,0 +1,1550 @@
+﻿@model List<OnlineRecipeSharing.Models.ViewModels.ReportViewModel>
+@{
+    ViewData["Title"] = "Reported Posts";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+    /* Global Styles */
+    body {
+        background: linear-gradient(135deg, #f0fdf4 0%, #e9ecef 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        color: #1e293b;
+    }
+
+    .container-fluid {
+        max-width: 1400px;
+    }
+
+    /* Page Header - Same as User Management */
+    h1 {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #3498db;
+        display: inline-block;
+    }
+
+    /* Animations */
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Stats Cards */
+    .stats-card {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        text-align: center;
+        margin-bottom: 20px;
+        animation: fadeInUp 0.6s ease;
+    }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #3498db;
+        margin-bottom: 5px;
+    }
+
+    .stats-label {
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Report Cards */
+    .report-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.15);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        overflow: hidden;
+        height: 100%;
+        background: white;
+        position: relative;
+        border-left: 5px solid #22c55e;
+        animation: fadeInUp 0.6s ease;
+    }
+
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        .report-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(34, 197, 94, 0.25);
+        }
+
+    .report-header {
+        background: linear-gradient(135deg, #1e293b 0%, #22c55e 100%);
+        color: white;
+        padding: 20px;
+        border-bottom: none;
+        position: relative;
+    }
+
+    .reason-badge {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+        border: 2px solid white;
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-remove {
+        background: linear-gradient(135deg, #ef4444 0%, #c0392b 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+
+        .btn-remove:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            color: white;
+        }
+
+    .btn-keep {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+        .btn-keep:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+            background: linear-gradient(135deg, #16a34a 0%, #1e8449 100%);
+            color: white;
+        }
+
+    .btn-preview {
+        background: linear-gradient(135deg, #0ea5e9 0%, #2980b9 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+
+        .btn-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+            background: linear-gradient(135deg, #2980b9 0%, #2471a3 100%);
+            color: white;
+        }
+
+    /* Filter Section */
+    .filter-section {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+        animation: fadeInUp 0.6s ease;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+        .search-box input {
+            padding-left: 45px;
+            border-radius: 25px;
+            border: 2px solid #e9ecef;
+            height: 50px;
+            font-size: 1rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 10;
+        }
+
+    .filter-select {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        height: 50px;
+        padding: 0 20px;
+    }
+
+    /* Description Box */
+    .description-box {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-left: 4px solid #22c55e;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        font-style: italic;
+    }
+
+    /* Empty State */
+    .empty-state {
+        background: white;
+        border-radius: 20px;
+        padding: 60px 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(34, 197, 94, 0.1);
+        border: 2px dashed #86efac;
+        animation: fadeInUp 0.6s ease;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: #86efac;
+        margin-bottom: 20px;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-pending {
+        background: linear-gradient(135deg, #eab308 0%, #e67e22 100%);
+        color: white;
+    }
+
+    /* Report Meta */
+    .report-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(34, 197, 94, 0.1);
+        padding: 4px 10px;
+        border-radius: 12px;
+        color: #16a34a;
+    }
+
+    .action-buttons {
+        display: grid;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    /* Back Button */
+    .back-btn {
+        background: linear-gradient(135deg, #27ae60, #229954);
+        border: none;
+        border-radius: 25px;
+        padding: 10px 25px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+            background: linear-gradient(135deg, #229954, #1e8449);
+            color: white;
+            text-decoration: none;
+        }
+
+    /* Alerts */
+    .alert {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border-left: 4px solid #22c55e;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f1b0b7 100%);
+        color: #721c24;
+        border-left: 4px solid #ef4444;
+    }
+
+    /* Recipe Details Modal */
+    .recipe-details-modal .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        overflow: hidden;
+        background: linear-gradient(145deg, #ffffff 0%, #f0fdf4 100%);
+    }
+
+    .recipe-details-modal .modal-header {
+        background: linear-gradient(135deg, #1e293b 0%, #22c55e 100%);
+        color: white;
+        border-bottom: none;
+        padding: 20px 30px;
+    }
+
+    .recipe-details-modal .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .recipe-header {
+        background: linear-gradient(135deg, #1e293b 0%, #22c55e 100%);
+        color: white;
+        min-height: 200px;
+    }
+
+    .recipe-overlay {
+        background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    }
+
+    .recipe-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .recipe-meta .meta-item {
+        background: rgba(255,255,255,0.2);
+        padding: 8px 16px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .section-title {
+        font-weight: 700;
+        border-bottom: 3px solid #22c55e;
+        padding-bottom: 10px;
+    }
+
+    .ingredients-list, .instructions-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .ingredient-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+        .ingredient-item:last-child {
+            border-bottom: none;
+        }
+
+    .ingredient-checkbox {
+        color: #22c55e;
+        margin-top: 2px;
+    }
+
+    .instruction-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        gap: 15px;
+    }
+
+        .instruction-item:last-child {
+            border-bottom: none;
+        }
+
+    .instruction-number {
+        background: #22c55e;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .instruction-text {
+        flex: 1;
+        line-height: 1.6;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .info-card {
+        border-left: 4px solid #22c55e;
+    }
+
+    /* Recipe Preview Modal */
+    .recipe-preview-modal .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        background: linear-gradient(145deg, #ffffff 0%, #f0fdf4 100%);
+    }
+
+    .recipe-preview-modal .modal-header {
+        background: linear-gradient(135deg, #1e293b 0%, #22c55e 100%);
+        color: white;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        padding: 25px;
+    }
+
+    .recipe-preview-modal .modal-body {
+        padding: 30px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .recipe-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 15px;
+        margin-bottom: 20px;
+    }
+
+    .recipe-details {
+        background: rgba(134, 239, 172, 0.2);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+    }
+
+    .ingredients-list, .instructions-list {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+
+    .modal-action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 25px;
+    }
+
+    .btn-modal-remove {
+        background: linear-gradient(135deg, #ef4444 0%, #c0392b 100%);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-modal-remove:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+
+    .btn-modal-keep {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-modal-keep:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+
+    /* Confirmation Modal */
+    .modal-content {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        background: linear-gradient(145deg, #ffffff 0%, #f0fdf4 100%);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #1e293b 0%, #22c55e 100%);
+        color: white;
+        border-bottom: none;
+        padding: 25px 30px 20px;
+        position: relative;
+    }
+
+        .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: #eab308;
+            border-radius: 2px;
+        }
+
+    .modal-title {
+        font-weight: 700;
+        font-size: 1.5rem;
+        text-align: center;
+        width: 100%;
+        margin: 0;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-close {
+        background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+        opacity: 0.8;
+        transition: all 0.3s ease;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+
+        .btn-close:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+
+    .modal-backdrop {
+        background-color: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(5px);
+    }
+
+        .modal-backdrop.show {
+            opacity: 1;
+        }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .stats-card {
+            margin-bottom: 15px;
+        }
+
+        .report-card {
+            margin-bottom: 20px;
+        }
+
+        .modal-action-buttons {
+            grid-template-columns: 1fr;
+        }
+
+        .recipe-meta {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #86efac;
+        border-radius: 4px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #22c55e;
+        }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Page Header - Same as User Management -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-flag me-3"></i>Reported Content Management</h1>
+        <div class="d-flex gap-3 align-items-center">
+            <a href="@Url.Action("Dashboard", "Admin")" class="back-btn">
+                <i class="fas fa-arrow-left me-2"></i>Dashboard
+            </a>
+            <span class="status-badge badge-pending">
+                <i class="fas fa-clock me-1"></i>@Model.Count Pending
+            </span>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number text-warning">@Model.Count</div>
+                <div class="stats-label">Pending Reports</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number text-info" id="totalReports">-</div>
+                <div class="stats-label">Total Reports</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number text-success" id="resolvedReports">-</div>
+                <div class="stats-label">Resolved</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number text-danger" id="dismissedReports">-</div>
+                <div class="stats-label">Recipes Removed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="filter-section">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control" placeholder="Search by reason, description, or reporter..." id="searchInput">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select filter-select" id="reasonFilter">
+                    <option value="">All Reasons</option>
+                    <option value="Inappropriate Content">Inappropriate Content</option>
+                    <option value="Spam or Misleading">Spam or Misleading</option>
+                    <option value="Copyright Violation">Copyright Violation</option>
+                    <option value="Harassment or Hate Speech">Harassment or Hate Speech</option>
+                    <option value="False Information">False Information</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select filter-select" id="sortFilter">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                    <i class="fas fa-rotate-left me-2"></i>Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Reports Grid -->
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-check-circle empty-icon"></i>
+            <h3 class="text-muted mb-3">No Pending Reports</h3>
+            <p class="text-muted mb-4">All reports have been reviewed and resolved. Great job!</p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-primary">
+                    <i class="fas fa-dashboard me-2"></i>Go to Dashboard
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row" id="reportsGrid">
+            @foreach (var reportVm in Model)
+            {
+                var report = reportVm.Report;
+                <div class="col-lg-6 col-xl-4 mb-4 report-item"
+                     data-reason="@report.Reason"
+                     data-date="@report.CreatedAt.ToString("yyyy-MM-dd")">
+                    <div class="report-card"
+                         data-recipe-id="@report.RecipeId"
+                         data-report-id="@report._id"
+                         style="cursor: pointer;">
+                        <div class="report-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="user-avatar">
+                                    @if (!string.IsNullOrEmpty(reportVm.ReporterUsername))
+                                    {
+                                        @reportVm.ReporterUsername.Substring(0, 1).ToUpper()
+                                    }
+                                    else
+                                    {
+                                        @:U
+                                    }
+                                </div>
+                                <div>
+                                    <div class="fw-bold">@reportVm.ReporterUsername</div>
+                                    <div class="reason-badge">@report.Reason</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-white-50 small">@report.CreatedAt.ToString("MMM dd")</div>
+                                <div class="text-white-50 small">@report.CreatedAt.ToString("hh:mm tt")</div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Recipe Information -->
+                            <div class="mb-3">
+                                <div class="fw-semibold text-primary mb-2">
+                                    <i class="fas fa-utensils me-2"></i>Recipe Information
+                                </div>
+                                <div class="fw-bold">@reportVm.RecipeTitle</div>
+                                <div class="small text-muted">ID: @report.RecipeId</div>
+                            </div>
+
+                            <!-- Additional Details -->
+                            @if (!string.IsNullOrEmpty(report.description))
+                            {
+                                <div class="mb-3">
+                                    <div class="fw-semibold text-primary mb-2">
+                                        <i class="fas fa-comment me-2"></i>Report Details
+                                    </div>
+                                    <div class="description-box">
+                                        <em>"@report.description"</em>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Report Metadata -->
+                            <div class="report-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>@report.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>@report.CreatedAt.ToString("hh:mm tt")</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-user"></i>
+                                    <span>@reportVm.ReporterUsername</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button type="button"
+                                    class="btn btn-preview action-btn"
+                                    onclick="showRecipePreview('@report.RecipeId', '@report._id')">
+                                <i class="fas fa-eye me-1"></i>Preview Recipe
+                            </button>
+                            <div class="btn-group w-100" role="group">
+                                <button type="button"
+                                        class="btn btn-remove action-btn"
+                                        onclick="resolveReport('@report._id', 'remove')">
+                                    <i class="fas fa-trash me-1"></i>Remove
+                                </button>
+                                <button type="button"
+                                        class="btn btn-keep action-btn"
+                                        onclick="resolveReport('@report._id', 'keep')">
+                                    <i class="fas fa-check me-1"></i>Keep
+                                </button>
+                            </div>
+                            <button type="button"
+                                    class="btn btn-outline-secondary action-btn w-100"
+                                    onclick="updateReportStatus('@report._id', 'reviewed')">
+                                <i class="fas fa-eye me-1"></i>Mark as Reviewed
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Rest of your modals and scripts remain the same -->
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Content will be inserted by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Preview Modal -->
+    <div class="modal fade recipe-preview-modal" id="recipePreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="recipePreviewTitle">
+                        <i class="fas fa-utensils me-2"></i>Recipe Preview
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="recipePreviewBody">
+                    <!-- Content will be loaded by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <div class="modal-action-buttons w-100">
+                        <button type="button" class="btn btn-modal-remove" id="previewModalRemoveBtn">
+                            <i class="fas fa-trash me-2"></i>Remove Recipe
+                        </button>
+                        <button type="button" class="btn btn-modal-keep" id="previewModalKeepBtn">
+                            <i class="fas fa-check me-2"></i>Keep Recipe
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Details Modal -->
+    <div class="modal fade recipe-details-modal" id="recipeDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-utensils me-2"></i>Recipe Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Loading Spinner -->
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-3">Loading recipe details...</p>
+                    </div>
+
+                    <!-- Recipe Content -->
+                    <div id="recipeContent" style="display: none;">
+                        <!-- Recipe Header with Image -->
+                        <div class="recipe-header position-relative">
+                            <img id="recipeImage" class="recipe-image w-100" alt="Recipe Image" style="height: 300px; object-fit: cover; display: none;">
+                            <div class="recipe-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-end p-4 text-white">
+                                <div>
+                                    <h1 id="recipeTitle" class="recipe-title mb-2"></h1>
+                                    <div class="recipe-meta d-flex flex-wrap gap-3" id="recipeMeta">
+                                        <!-- Meta info will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recipe Body -->
+                        <div class="recipe-body p-4">
+                            <!-- Description -->
+                            <div class="description-section mb-4">
+                                <h4 class="section-title text-success mb-3">
+                                    <i class="fas fa-file-lines me-2"></i>Description
+                                </h4>
+                                <div id="recipeDescription" class="description-content p-3 bg-light rounded">
+                                    <!-- Description will be populated here -->
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Ingredients Column -->
+                                <div class="col-lg-6 mb-4">
+                                    <div class="ingredients-section">
+                                        <h4 class="section-title text-success mb-3">
+                                            <i class="fas fa-list-check me-2"></i>Ingredients
+                                        </h4>
+                                        <div class="ingredients-list p-3 bg-white rounded shadow-sm">
+                                            <div id="ingredientsList">
+                                                <!-- Ingredients will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Instructions Column -->
+                                <div class="col-lg-6 mb-4">
+                                    <div class="instructions-section">
+                                        <h4 class="section-title text-success mb-3">
+                                            <i class="fas fa-book-open me-2"></i>Instructions
+                                        </h4>
+                                        <div class="instructions-list p-3 bg-white rounded shadow-sm">
+                                            <div id="instructionsList">
+                                                <!-- Instructions will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Info -->
+                            <div class="additional-info mt-4">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-card p-3 bg-light rounded">
+                                            <h6 class="text-success mb-3">
+                                                <i class="fas fa-tags me-2"></i>Category & Tags
+                                            </h6>
+                                            <div id="categoryTags">
+                                                <!-- Category and tags will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-card p-3 bg-light rounded">
+                                            <h6 class="text-success mb-3">
+                                                <i class="fas fa-chart-bar me-2"></i>Recipe Stats
+                                            </h6>
+                                            <div id="recipeStats">
+                                                <!-- Stats will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="recipeError" class="text-center p-5" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                        <h5 class="text-danger">Error Loading Recipe</h5>
+                        <p class="text-muted" id="errorMessage">Unable to load recipe details. Please try again.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="action-buttons w-100">
+                        <button type="button" class="btn btn-danger btn-lg me-2" id="detailsModalRemoveBtn">
+                            <i class="fas fa-trash me-2"></i>Remove Recipe
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg" id="detailsModalKeepBtn">
+                            <i class="fas fa-check me-2"></i>Keep Recipe
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        // Your existing JavaScript code remains the same
+        let currentReportId = '';
+        let currentRecipeId = '';
+
+        // Filter and Search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing report management...');
+
+            const searchInput = document.getElementById('searchInput');
+            const reasonFilter = document.getElementById('reasonFilter');
+            const sortFilter = document.getElementById('sortFilter');
+            const resetFilters = document.getElementById('resetFilters');
+            const reportItems = document.querySelectorAll('.report-item');
+
+            function filterReports() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const reasonValue = reasonFilter.value;
+                const sortValue = sortFilter.value;
+
+                let visibleItems = [];
+
+                reportItems.forEach(item => {
+                    const reason = item.getAttribute('data-reason') || '';
+                    const date = item.getAttribute('data-date') || '';
+                    const textContent = item.textContent.toLowerCase();
+
+                    const matchesSearch = !searchTerm || textContent.includes(searchTerm);
+                    const matchesReason = !reasonValue || reason === reasonValue;
+
+                    if (matchesSearch && matchesReason) {
+                        item.style.display = '';
+                        visibleItems.push(item);
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Sort items
+                if (sortValue === 'oldest') {
+                    visibleItems.sort((a, b) => new Date(a.getAttribute('data-date')) - new Date(b.getAttribute('data-date')));
+                } else {
+                    visibleItems.sort((a, b) => new Date(b.getAttribute('data-date')) - new Date(a.getAttribute('data-date')));
+                }
+
+                // Reorder DOM
+                const grid = document.getElementById('reportsGrid');
+                if (grid) {
+                    visibleItems.forEach(item => grid.appendChild(item));
+                }
+            }
+
+            if (searchInput) searchInput.addEventListener('input', filterReports);
+            if (reasonFilter) reasonFilter.addEventListener('change', filterReports);
+            if (sortFilter) sortFilter.addEventListener('change', filterReports);
+
+            if (resetFilters) {
+                resetFilters.addEventListener('click', function() {
+                    if (searchInput) searchInput.value = '';
+                    if (reasonFilter) reasonFilter.value = '';
+                    if (sortFilter) sortFilter.value = 'newest';
+                    filterReports();
+                });
+            }
+
+            // Attach click handlers to report cards (open details)
+            document.querySelectorAll('.report-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Don't trigger if clicking on action buttons
+                    if (e.target.closest('.action-btn') || e.target.closest('.btn-group') || e.target.closest('button')) {
+                        return;
+                    }
+
+                    const recipeId = this.getAttribute('data-recipe-id');
+                    const reportId = this.getAttribute('data-report-id');
+
+                    if (recipeId && reportId) {
+                        showRecipeDetails(recipeId, reportId);
+                    }
+                });
+            });
+
+            // Bind modal buttons for preview modal
+            const previewRemoveBtn = document.getElementById('previewModalRemoveBtn');
+            const previewKeepBtn = document.getElementById('previewModalKeepBtn');
+
+            if (previewRemoveBtn) {
+                previewRemoveBtn.addEventListener('click', function() {
+                    if (!currentReportId) {
+                        showToast('Error', 'No report selected', 'error');
+                        return;
+                    }
+                    if (confirm('Are you sure you want to remove this recipe? This action cannot be undone.')) {
+                        updateReportStatus(currentReportId, 'dismissed');
+                        const instance = bootstrap.Modal.getInstance(document.getElementById('recipePreviewModal'));
+                        if (instance) instance.hide();
+                    }
+                });
+            }
+
+            if (previewKeepBtn) {
+                previewKeepBtn.addEventListener('click', function() {
+                    if (!currentReportId) {
+                        showToast('Error', 'No report selected', 'error');
+                        return;
+                    }
+                    if (confirm('Mark this report as resolved and keep the recipe?')) {
+                        updateReportStatus(currentReportId, 'resolved');
+                        const instance = bootstrap.Modal.getInstance(document.getElementById('recipePreviewModal'));
+                        if (instance) instance.hide();
+                    }
+                });
+            }
+
+            // Bind modal buttons for details modal
+            const detailsRemoveBtn = document.getElementById('detailsModalRemoveBtn');
+            const detailsKeepBtn = document.getElementById('detailsModalKeepBtn');
+
+            if (detailsRemoveBtn) {
+                detailsRemoveBtn.addEventListener('click', function() {
+                    if (!currentReportId) {
+                        showToast('Error', 'No report selected', 'error');
+                        return;
+                    }
+                    if (confirm('Are you sure you want to remove this recipe? This action cannot be undone.')) {
+                        updateReportStatus(currentReportId, 'dismissed');
+                        const instance = bootstrap.Modal.getInstance(document.getElementById('recipeDetailsModal'));
+                        if (instance) instance.hide();
+                    }
+                });
+            }
+
+            if (detailsKeepBtn) {
+                detailsKeepBtn.addEventListener('click', function() {
+                    if (!currentReportId) {
+                        showToast('Error', 'No report selected', 'error');
+                        return;
+                    }
+                    if (confirm('Mark this report as resolved and keep the recipe?')) {
+                        updateReportStatus(currentReportId, 'resolved');
+                        const instance = bootstrap.Modal.getInstance(document.getElementById('recipeDetailsModal'));
+                        if (instance) instance.hide();
+                    }
+                });
+            }
+
+            // Load stats
+            loadReportStats();
+        });
+
+        // Show recipe preview modal
+        async function showRecipePreview(recipeId, reportId) {
+            currentReportId = reportId;
+            currentRecipeId = recipeId;
+
+            try {
+                // Show loading state
+                document.getElementById('recipePreviewBody').innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading recipe details...</p>
+                    </div>
+                `;
+
+                const modalEl = document.getElementById('recipePreviewModal');
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+
+                // Fetch recipe details
+                const response = await fetch(`/Recipe/GetRecipeDetails/${recipeId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch recipe details');
+                }
+
+                const recipe = await response.json();
+
+                // Populate modal with recipe data (API expected to return flat json)
+                document.getElementById('recipePreviewBody').innerHTML = `
+                    <div class="recipe-preview-content">
+                        ${recipe.image_url ? `<img src="${recipe.image_url}" class="recipe-image" alt="${recipe.title}">` : ''}
+
+                        <div class="recipe-details">
+                            <h4 class="text-success mb-3">${recipe.title}</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong><i class="fa-solid fa-clock me-2"></i>Prep Time:</strong> ${recipe.prep_time || 'N/A'} minutes</p>
+                                    <p><strong><i class="fa-solid fa-fire me-2"></i>Cook Time:</strong> ${recipe.cook_time || 'N/A'} minutes</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong><i class="fa-solid fa-utensils me-2"></i>Servings:</strong> ${recipe.servings || 'N/A'}</p>
+                                    <p><strong><i class="fa-solid fa-chart-line me-2"></i>Difficulty:</strong> ${recipe.difficulty || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${recipe.ingredients && recipe.ingredients.length > 0 ? `
+                            <div class="ingredients-list">
+                                <h5 class="text-success mb-3"><i class="fa-solid fa-list me-2"></i>Ingredients</h5>
+                                <ul class="list-unstyled">
+                                    ${recipe.ingredients.map(ingredient => `<li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i>${ingredient}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+
+                        ${recipe.instructions && recipe.instructions.length > 0 ? `
+                            <div class="instructions-list">
+                                <h5 class="text-success mb-3"><i class="fa-solid fa-book me-2"></i>Instructions</h5>
+                                <ol>
+                                    ${recipe.instructions.map(instruction => `<li class="mb-3">${instruction}</li>`).join('')}
+                                </ol>
+                            </div>
+                        ` : ''}
+
+                        ${recipe.description ? `
+                            <div class="description-box">
+                                <h6 class="text-success mb-2"><i class="fa-solid fa-file-lines me-2"></i>Description</h6>
+                                <p class="mb-0">${recipe.description}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error loading recipe preview:', error);
+                document.getElementById('recipePreviewBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                        Error loading recipe details. Please try again.
+                    </div>
+                `;
+            }
+        }
+
+        function resolveReport(reportId, action) {
+            console.log('Resolving report:', reportId, 'Action:', action);
+
+            if (!reportId) {
+                alert('Invalid report ID');
+                return;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            const confirmBtn = document.getElementById('confirmAction');
+
+            // Remove previous click handlers to avoid multiple bindings
+            confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+            const newConfirm = document.getElementById('confirmAction');
+
+            if (action === 'remove') {
+                modalTitle.innerHTML = '<i class="fa-solid fa-trash text-danger me-2"></i>Remove Recipe';
+                modalBody.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                    <p>Are you sure you want to remove this recipe? The recipe will be permanently hidden from the platform.</p>
+                `;
+                newConfirm.className = 'btn btn-danger';
+                newConfirm.innerHTML = '<i class="fa-solid fa-trash me-2"></i>Remove Recipe';
+
+                newConfirm.addEventListener('click', function handler() {
+                    updateReportStatus(reportId, 'dismissed');
+                    modal.hide();
+                    newConfirm.removeEventListener('click', handler);
+                });
+            } else {
+                modalTitle.innerHTML = '<i class="fa-solid fa-check text-success me-2"></i>Keep Recipe';
+                modalBody.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-info-circle me-2"></i>
+                        Mark this report as resolved and keep the recipe visible.
+                    </div>
+                    <p>Are you sure you want to keep this recipe? The report will be marked as resolved.</p>
+                `;
+                newConfirm.className = 'btn btn-success';
+                newConfirm.innerHTML = '<i class="fa-solid fa-check me-2"></i>Keep Recipe';
+
+                newConfirm.addEventListener('click', function handler() {
+                    updateReportStatus(reportId, 'resolved');
+                    modal.hide();
+                    newConfirm.removeEventListener('click', handler);
+                });
+            }
+
+            modal.show();
+        }
+
+        function updateReportStatus(reportId, status) {
+            console.log('Updating report status:', reportId, status);
+
+            if (!reportId || !status) {
+                alert('Missing required parameters');
+                return;
+            }
+
+            // Get anti-forgery token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (!token) {
+                alert('Security token missing. Please refresh the page.');
+                return;
+            }
+
+            const formData = new URLSearchParams();
+            formData.append('reportId', reportId);
+            formData.append('status', status);
+
+            fetch('@Url.Action("UpdateStatus", "Admin")', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': token.value,
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('Success:', data.message);
+                    // Show success message and reload
+                    showToast('Success', data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    console.error('Error:', data.message);
+                    showToast('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showToast('Error', 'Error updating report status. Please try again.', 'error');
+            });
+        }
+
+        // Also update the "Mark as Reviewed" button to use the same function
+        function updateStatus(reportId, status) {
+            updateReportStatus(reportId, status);
+        }
+
+        // Show recipe details modal
+        async function showRecipeDetails(recipeId, reportId) {
+            currentReportId = reportId;
+            currentRecipeId = recipeId;
+
+            const modalEl = document.getElementById('recipeDetailsModal');
+            const modal = new bootstrap.Modal(modalEl);
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const recipeContent = document.getElementById('recipeContent');
+            const recipeError = document.getElementById('recipeError');
+
+            // Reset states
+            loadingSpinner.style.display = 'block';
+            recipeContent.style.display = 'none';
+            recipeError.style.display = 'none';
+
+            // Show modal
+            modal.show();
+
+            try {
+                // Fetch recipe details from your API
+                const response = await fetch(`/Admin/GetRecipeDetails?id=${encodeURIComponent(recipeId)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch recipe details');
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to load recipe');
+                }
+
+                const recipe = result.data;
+
+                // Populate modal with recipe data
+                populateRecipeModal(recipe);
+
+                // Show content
+                loadingSpinner.style.display = 'none';
+                recipeContent.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading recipe:', error);
+                loadingSpinner.style.display = 'none';
+                recipeError.style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message || 'Error loading recipe details';
+            }
+        }
+
+        // Populate the modal with recipe data
+        function populateRecipeModal(recipe) {
+            // Set recipe image
+            const recipeImage = document.getElementById('recipeImage');
+            if (recipe.images && recipe.images.length > 0) {
+                recipeImage.src = recipe.images[0];
+                recipeImage.style.display = 'block';
+            } else {
+                recipeImage.style.display = 'none';
+            }
+
+            // Set recipe title
+            document.getElementById('recipeTitle').textContent = recipe.title || 'Untitled Recipe';
+
+            // Set recipe description
+            const descriptionElement = document.getElementById('recipeDescription');
+            if (recipe.description) {
+                descriptionElement.textContent = recipe.description;
+                descriptionElement.style.display = 'block';
+            } else {
+                descriptionElement.innerHTML = '<em class="text-muted">No description provided.</em>';
+            }
+
+            // Set recipe meta information
+            const metaElement = document.getElementById('recipeMeta');
+            metaElement.innerHTML = `
+                <div class="meta-item">
+                    <i class="fa-solid fa-user me-2"></i>
+                    <span>By ${recipe.author}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fa-solid fa-calendar me-2"></i>
+                    <span>${recipe.created_at}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fa-solid fa-heart me-2"></i>
+                    <span>${recipe.upvotes} upvotes</span>
+                </div>
+            `;
+
+            // Populate ingredients
+            const ingredientsList = document.getElementById('ingredientsList');
+            ingredientsList.innerHTML = '';
+
+            if (recipe.ingredients && recipe.ingredients.length > 0) {
+                recipe.ingredients.forEach(ingredient => {
+                    const ingredientElement = document.createElement('div');
+                    ingredientElement.className = 'ingredient-item';
+                    ingredientElement.innerHTML = `
+                        <i class="fa-regular fa-circle ingredient-checkbox"></i>
+                        <span>${ingredient}</span>
+                    `;
+                    ingredientsList.appendChild(ingredientElement);
+                });
+            } else {
+                ingredientsList.innerHTML = '<p class="text-muted text-center">No ingredients listed.</p>';
+            }
+
+            // Populate instructions
+            const instructionsList = document.getElementById('instructionsList');
+            instructionsList.innerHTML = '';
+
+            if (recipe.instructions && recipe.instructions.length > 0) {
+                recipe.instructions.forEach((instruction, index) => {
+                    const instructionElement = document.createElement('div');
+                    instructionElement.className = 'instruction-item';
+                    instructionElement.innerHTML = `
+                        <div class="instruction-number">${index + 1}</div>
+                        <div class="instruction-text">${instruction}</div>
+                    `;
+                    instructionsList.appendChild(instructionElement);
+                });
+            } else {
+                instructionsList.innerHTML = '<p class="text-muted text-center">No instructions provided.</p>';
+            }
+
+            // Populate category and tags
+            const categoryTagsElement = document.getElementById('categoryTags');
+            let categoryTagsHtml = '';
+
+            if (recipe.category) {
+                categoryTagsHtml += `<div class="mb-2"><strong>Category:</strong> ${recipe.category}</div>`;
+            }
+
+            if (recipe.tags && recipe.tags.length > 0) {
+                categoryTagsHtml += `<div><strong>Tags:</strong> ${recipe.tags.join(', ')}</div>`;
+            }
+
+            categoryTagsElement.innerHTML = categoryTagsHtml || '<em class="text-muted">No category or tags</em>';
+
+            // Populate recipe stats
+            const recipeStatsElement = document.getElementById('recipeStats');
+            recipeStatsElement.innerHTML = `
+                <div class="mb-2"><strong>Upvotes:</strong> ${recipe.upvotes}</div>
+                <div class="mb-2"><strong>Comments:</strong> ${recipe.comments_count}</div>
+                <div><strong>Status:</strong> <span class="badge bg-success">Active</span></div>
+            `;
+        }
+
+        async function loadReportStats() {
+            try {
+                console.log('Loading report stats...');
+                const response = await fetch('@Url.Action("GetReportStats", "Admin")');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+
+                if (result.success) {
+                    console.log('Stats loaded:', result.data);
+                    const stats = result.data;
+                    document.getElementById('totalReports').textContent = stats.totalReports || 0;
+                    document.getElementById('resolvedReports').textContent = stats.resolvedReports || 0;
+                    document.getElementById('dismissedReports').textContent = stats.dismissedReports || 0;
+                } else {
+                    console.error('Error loading stats:', result.message);
+                    setFallbackStats();
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                setFallbackStats();
+            }
+        }
+
+        function setFallbackStats() {
+            const pendingCount = @Model.Count;
+            document.getElementById('totalReports').textContent = pendingCount;
+            document.getElementById('resolvedReports').textContent = '0';
+            document.getElementById('dismissedReports').textContent = '0';
+        }
+
+        // Utility function to show toast messages
+        function showToast(title, message, type) {
+            // You can implement a toast notification here
+            // For now, using alert as fallback
+            alert(`${title}: ${message}`);
+        }
+    </script>
+}
